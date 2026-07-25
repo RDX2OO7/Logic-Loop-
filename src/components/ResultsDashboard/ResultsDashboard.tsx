@@ -1,0 +1,140 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CopilotData } from '../../types';
+import { CheckCircle2, AlertTriangle, FileText, Presentation, Sparkles, BookOpen, Lightbulb, Calendar, Database } from 'lucide-react';
+import { TabOverview } from './TabOverview';
+import { TabResearch } from './TabResearch';
+import { TabGapsInnovation } from './TabGapsInnovation';
+import { TabRoadmap } from './TabRoadmap';
+import { TabResources } from './TabResources';
+
+interface ResultsDashboardProps {
+  data: CopilotData;
+}
+
+type TabType = 'overview' | 'research' | 'gaps' | 'roadmap' | 'resources';
+
+const TABS: { id: TabType; label: string; icon: React.ElementType }[] = [
+  { id: 'overview', label: 'Overview', icon: Sparkles },
+  { id: 'research', label: 'Research', icon: BookOpen },
+  { id: 'gaps', label: 'Gaps & Innovation', icon: Lightbulb },
+  { id: 'roadmap', label: 'Roadmap', icon: Calendar },
+  { id: 'resources', label: 'Resources', icon: Database },
+];
+
+export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ data }) => {
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
+
+  const handleExportDocx = () => {
+    alert("Exporting project plan to .docx format...");
+  };
+
+  const handleExportPptx = () => {
+    alert("Exporting project presentation to .pptx format...");
+  };
+
+  return (
+    <div className="flex-1 min-h-screen bg-white flex flex-col p-8 space-y-6">
+      
+      {/* Top Bar Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#E3E5F0]">
+        
+        {/* Title & Critic Badge */}
+        <div className="space-y-2 max-w-3xl">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-[24px] font-semibold text-[#15193D] tracking-tight leading-snug">
+              {data.normalized_problem}
+            </h1>
+
+            {/* Critic Approved / Flagged Badge */}
+            {data.critic.approved ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold bg-[#16A34A]/10 text-[#16A34A] border border-[#16A34A]/20 shrink-0">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Critic approved ✓
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold bg-[#DC2626]/10 text-[#DC2626] border border-[#DC2626]/20 shrink-0">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                Critic flagged {data.critic.issues.length} items
+              </span>
+            )}
+          </div>
+
+          <div className="text-[13px] text-[#6B7280] flex items-center gap-2">
+            <span>Verified AI Research Plan</span>
+            <span>•</span>
+            <span>Generated in 14.2s</span>
+            <span>•</span>
+            <span>8/8 Agents passed</span>
+          </div>
+        </div>
+
+        {/* Right Side: Export Buttons */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            onClick={handleExportDocx}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[#E3E5F0] bg-white text-[#15193D] hover:bg-[#F4F5FA] text-[13px] font-medium transition-colors shadow-2xs"
+          >
+            <FileText className="w-4 h-4 text-[#15193D]" />
+            <span>Export .docx</span>
+          </button>
+
+          <button
+            onClick={handleExportPptx}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[#E3E5F0] bg-white text-[#15193D] hover:bg-[#F4F5FA] text-[13px] font-medium transition-colors shadow-2xs"
+          >
+            <Presentation className="w-4 h-4 text-[#15193D]" />
+            <span>Export .pptx</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Horizontal Tab Navigation Bar (Filled Navy Pill active state, NOT underline) */}
+      <div className="flex items-center gap-2 p-1 bg-[#F4F5FA] border border-[#E3E5F0] rounded-full w-max shadow-2xs">
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const IconComp = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-150 ${
+                isActive
+                  ? 'bg-[#15193D] text-white shadow-xs'
+                  : 'text-[#6B7280] hover:text-[#15193D] hover:bg-white/60'
+              }`}
+            >
+              <IconComp className={`w-4 h-4 ${isActive ? 'text-[#F5A623]' : 'text-[#6B7280]'}`} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab Contents Area with Motion Fade */}
+      <div className="flex-1 pt-2">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+          >
+            {activeTab === 'overview' && <TabOverview data={data} />}
+            {activeTab === 'research' && <TabResearch sources={data.sources} />}
+            {activeTab === 'gaps' && (
+              <TabGapsInnovation
+                gaps={data.gaps}
+                innovationAngles={data.innovation_angles}
+              />
+            )}
+            {activeTab === 'roadmap' && <TabRoadmap plan={data.plan} />}
+            {activeTab === 'resources' && <TabResources resources={data.resources} />}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+    </div>
+  );
+};
