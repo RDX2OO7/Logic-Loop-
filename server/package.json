@@ -4,10 +4,12 @@
   "type": "module",
   "description": "ResearchOS server and agent system",
   "scripts": {
-    "test:discovery": "node agents/discoveryAgent.test.js"
+    "test:discovery": "node agents/discoveryAgent.test.js",
+    "test:deepsearch": "node services/deepSearch.test.js"
   },
   "dependencies": {
     "@google/genai": "^2.13.0",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "fast-xml-parser": "^5.10.1"
   }
 }
