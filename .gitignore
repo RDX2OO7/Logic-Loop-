@@ -3,3 +3,10 @@ dist
 .env
 /server/.env
 server/.env
+discoveryAgent.test.js
+gapInnovationAgent.test.js
+resourceCuratorAgent.test.js
+deepSearchAgent.test.js
+fixtures
+
+
