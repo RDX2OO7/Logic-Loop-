@@ -1,16 +1,28 @@
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
-dotenv.config();
+import { fileURLToPath } from "url";
+import path from "path";
 
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error("Missing GEMINI_API_KEY in .env — get one at https://aistudio.google.com/apikey");
+// Resolve .env relative to this file's directory, not process.cwd(),
+// so the key is found no matter which subdirectory the script is run from.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
+let _client = null;
+
+function getClient() {
+  if (!_client) {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error("Missing GEMINI_API_KEY in .env — get one at https://aistudio.google.com/apikey");
+    }
+    _client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  }
+  return _client;
 }
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function generateJSON(systemInstruction, userPrompt, model = "gemini-2.5-flash") {
   const call = async (prompt) => {
-    const response = await ai.models.generateContent({
+    const response = await getClient().models.generateContent({
       model,
       contents: prompt,
       config: {
