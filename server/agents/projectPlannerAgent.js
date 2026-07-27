@@ -23,12 +23,17 @@ Respond with ONLY valid JSON, no markdown fences, matching this exact shape:
   "apis_needed": ["string", ...]
 }`;
 
-export async function runProjectPlannerAgent(chosenAngle, gaps = []) {
+export async function runProjectPlannerAgent(chosenAngle, gaps = [], priorIssues = []) {
   if (!chosenAngle || !chosenAngle.angle) {
     throw new Error("runProjectPlannerAgent requires a chosenAngle object with at least an 'angle' field.");
   }
 
-  const prompt = `Chosen innovation angle:\n${JSON.stringify(chosenAngle, null, 2)}\n\nBroader gap context this angle addresses:\n${JSON.stringify(gaps, null, 2)}`;
+  let prompt = `Chosen innovation angle:\n${JSON.stringify(chosenAngle, null, 2)}\n\nBroader gap context this angle addresses:\n${JSON.stringify(gaps, null, 2)}`;
+
+  if (priorIssues.length > 0) {
+    const issueLines = priorIssues.map((iss, i) => `  ${i + 1}. [${iss.agent}] ${iss.problem}`).join("\n");
+    prompt += `\n\nCRITIC FEEDBACK FROM PREVIOUS ATTEMPT — you MUST address all of these in your revised plan:\n${issueLines}\n\nDo NOT repeat any of the listed problems. Revise the architecture, tech_stack, milestones, and apis_needed accordingly.`;
+  }
 
   const result = await generateJSON(SYSTEM_INSTRUCTION, prompt);
 

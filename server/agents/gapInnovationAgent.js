@@ -53,8 +53,13 @@ export function stripUnverifiedEvidence(agentOutput, validIds) {
   return { ...agentOutput, innovation_angles: cleanedAngles, _stripped_hallucinated_citations: strippedCount };
 }
 
-export async function runGapInnovationAgent(query) {
-  const deepSearchResult = await runDeepSearchAgent(query);
+/**
+ * runGapReasoningOnSources(deepSearchResult, query)
+ * Core reasoning step — takes an already-fetched DeepSearch result object
+ * and runs the Gemini gap/innovation analysis on it.
+ * Does NOT call DeepSearch itself, so the Orchestrator can reuse one fetch.
+ */
+export async function runGapReasoningOnSources(deepSearchResult, query) {
   const sources = buildSourceList(deepSearchResult);
 
   if (sources.length === 0) {
@@ -75,4 +80,14 @@ export async function runGapInnovationAgent(query) {
   const cleaned = stripUnverifiedEvidence(rawOutput, validIds);
 
   return { ...cleaned, _source_count: sources.length };
+}
+
+/**
+ * runGapInnovationAgent(query)
+ * Convenience wrapper — fetches DeepSearch results then delegates to
+ * runGapReasoningOnSources. Kept for backward-compatibility with existing tests.
+ */
+export async function runGapInnovationAgent(query) {
+  const deepSearchResult = await runDeepSearchAgent(query);
+  return runGapReasoningOnSources(deepSearchResult, query);
 }

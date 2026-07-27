@@ -504,3 +504,37 @@ export async function runPublisherAgent(draft, opts = {}) {
 
   return { docxPath, pptxPath };
 }
+
+// ─── Orchestrator-facing aliases ──────────────────────────────────────────────
+// The orchestrator imports generateDocxReport / generatePptxDeck as separate
+// functions so it can inject them independently as deps for testing.
+
+/**
+ * generateDocxReport(projectData, fileName)
+ * Alias for buildDocx — accepts the orchestrator's projectData shape.
+ */
+export async function generateDocxReport(projectData, fileName = "output.docx") {
+  // Map orchestrator's projectData keys → publisher draft keys
+  const draft = {
+    topic: projectData.title ?? projectData.normalized_problem,
+    innovation_angles: projectData.chosen_angle ? [projectData.chosen_angle] : [],
+    plan: projectData.plan,
+    resources: projectData.resources ?? { datasets: [], repos: [], apis: [] },
+  };
+  return buildDocx(draft, fileName);
+}
+
+/**
+ * generatePptxDeck(projectData, fileName)
+ * Alias for buildPptx — accepts the orchestrator's projectData shape.
+ */
+export function generatePptxDeck(projectData, fileName = "output.pptx") {
+  const draft = {
+    topic: projectData.title ?? projectData.normalized_problem,
+    innovation_angles: projectData.chosen_angle ? [projectData.chosen_angle] : [],
+    plan: projectData.plan,
+    resources: projectData.resources ?? { datasets: [], repos: [], apis: [] },
+  };
+  return buildPptx(draft, fileName);
+}
+
