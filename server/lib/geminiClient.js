@@ -20,7 +20,7 @@ function getClient() {
   return _client;
 }
 
-export async function generateJSON(systemInstruction, userPrompt, model = "gemini-2.5-flash") {
+export async function generateJSON(systemInstruction, userPrompt, model = "gemini-flash-latest") {
   const call = async (prompt) => {
     const response = await getClient().models.generateContent({
       model,
