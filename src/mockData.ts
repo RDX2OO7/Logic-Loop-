@@ -2,6 +2,7 @@ import { CopilotData } from './types';
 
 export const mockCopilotData: CopilotData = {
   normalized_problem: "Automated dining hall food waste monitoring and dynamic meal forecasting platform for university campus dining systems",
+  pipelineStatus: "approved",
   status: "done",
   agent_progress: [
     { name: "Discovery", status: "done", description: "Identified core waste vectors in dining halls" },

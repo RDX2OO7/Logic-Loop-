@@ -75,6 +75,10 @@ export interface Critic {
 
 export interface CopilotData {
   normalized_problem: string;
+  evidence_summary?: string;
+  pipelineStatus: "approved" | "approved_with_unresolved_issues" | "needs_clarification" | "insufficient_evidence" | "error";
+  question?: string;
+  log?: string[];
   status: "idle" | "running" | "done";
   agent_progress: AgentProgress[];
   sources: Sources;
@@ -84,4 +88,10 @@ export interface CopilotData {
   plan: Plan;
   resources: Resources;
   critic: Critic;
+  generatedAt?: string;
+  executionTimeSec?: number;
+  exports?: {
+    docxPath?: string;
+    pptxPath?: string;
+  };
 }

@@ -26,12 +26,23 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ data }) => {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   const handleExportDocx = () => {
-    alert("Exporting project plan to .docx format...");
+    if (data.exports?.docxPath) {
+      alert(`Exported report: ${data.exports.docxPath}`);
+    } else {
+      alert("Exporting project plan to .docx format...");
+    }
   };
 
   const handleExportPptx = () => {
-    alert("Exporting project presentation to .pptx format...");
+    if (data.exports?.pptxPath) {
+      alert(`Exported deck: ${data.exports.pptxPath}`);
+    } else {
+      alert("Exporting project presentation to .pptx format...");
+    }
   };
+
+  const timeDisplay = data.executionTimeSec ? `${data.executionTimeSec}s` : '14.2s';
+  const timestampDisplay = data.generatedAt ? `at ${data.generatedAt}` : '';
 
   return (
     <div className="flex-1 min-h-screen bg-white flex flex-col p-8 space-y-6">
@@ -63,7 +74,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ data }) => {
           <div className="text-[13px] text-[#6B7280] flex items-center gap-2">
             <span>Verified AI Research Plan</span>
             <span>•</span>
-            <span>Generated in 14.2s</span>
+            <span>Generated {timestampDisplay} in {timeDisplay}</span>
             <span>•</span>
             <span>8/8 Agents passed</span>
           </div>
