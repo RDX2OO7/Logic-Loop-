@@ -20,8 +20,28 @@ function getClient() {
   return _client;
 }
 
-export async function generateJSON(systemInstruction, userPrompt, model = "gemini-flash-latest") {
-  const call = async (prompt) => {
+const MAX_RETRIES = 5;
+const BASE_BACKOFF_MS = 5000;
+
+function parseRetryDelaySec(err) {
+  try {
+    const body = JSON.parse(err.message);
+    const retryInfo = body?.error?.details?.find(
+      (d) => d["@type"] === "type.googleapis.com/google.rpc.RetryInfo"
+    );
+    if (retryInfo?.retryDelay) {
+      return Math.ceil(parseFloat(retryInfo.retryDelay)) * 1000;
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function generateJSON(systemInstruction, userPrompt, model = "gemini-3.5-flash-lite") {
+  const callOnce = async (prompt) => {
     const response = await getClient().models.generateContent({
       model,
       contents: prompt,
@@ -33,12 +53,38 @@ export async function generateJSON(systemInstruction, userPrompt, model = "gemin
     return response.text;
   };
 
-  const raw = await call(userPrompt);
+  const callWithRetry = async (prompt) => {
+    let attempt = 0;
+    while (true) {
+      try {
+        return await callOnce(prompt);
+      } catch (err) {
+        const isRetryable = err?.status === 429 || err?.status === 503;
+        if (isRetryable && attempt < MAX_RETRIES) {
+          attempt++;
+          const serverDelayMs = parseRetryDelaySec(err);
+          const waitMs = serverDelayMs ?? BASE_BACKOFF_MS * Math.pow(2, attempt - 1);
+          console.warn(
+            `[geminiClient] ${err.status} (attempt ${attempt}/${MAX_RETRIES}). ` +
+            `Waiting ${(waitMs / 1000).toFixed(1)}s…`
+          );
+          await sleep(waitMs);
+        } else {
+          throw err;
+        }
+      }
+    }
+  };
+
+  const raw = await callWithRetry(userPrompt);
   try {
     return JSON.parse(raw);
-  } catch (err) {
-    const retryPrompt = `${userPrompt}\n\nYour previous response could not be parsed as JSON. Respond with ONLY valid JSON, no markdown fences, no commentary. Previous invalid response was:\n${raw}`;
-    const retryRaw = await call(retryPrompt);
+  } catch (_parseErr) {
+    const retryPrompt =
+      `${userPrompt}\n\nYour previous response could not be parsed as JSON. ` +
+      `Respond with ONLY valid JSON, no markdown fences, no commentary. ` +
+      `Previous invalid response was:\n${raw}`;
+    const retryRaw = await callWithRetry(retryPrompt);
     try {
       return JSON.parse(retryRaw);
     } catch (err2) {

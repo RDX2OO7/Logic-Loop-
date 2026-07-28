@@ -93,6 +93,7 @@ export async function runResearchOSPipeline(ideaRaw, studentId, deps = defaultDe
     evidence_summary: gapResult.evidence_summary,
     gaps: gapResult.gaps,
     chosen_angle: chosenAngle,
+    sources: deepSearchResult,
     plan,
     resources: curated,
   };

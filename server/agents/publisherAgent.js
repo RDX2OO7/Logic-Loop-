@@ -510,18 +510,175 @@ export async function runPublisherAgent(draft, opts = {}) {
 // functions so it can inject them independently as deps for testing.
 
 /**
+ * resolveEvidenceSources(evidenceIds, sources)
+ * Maps an array of evidence_id strings to { title, url } objects by looking
+ * them up in the raw deepSearchResult (sources.papers / sources.repos / sources.web).
+ * Returns an array of resolved objects; unresolvable ids are returned as-is.
+ */
+function resolveEvidenceSources(evidenceIds = [], sources = {}) {
+  const pool = [
+    ...(sources.papers ?? []),
+    ...(sources.repos  ?? []),
+    ...(sources.web    ?? []),
+  ];
+  const byId = new Map(pool.map((s) => [s.id, s]));
+
+  return evidenceIds.map((id) => {
+    const hit = byId.get(id);
+    if (!hit) return { id, title: id, url: "" };
+    return {
+      id,
+      title: hit.title ?? hit.name ?? id,
+      url:   hit.url  ?? hit.html_url ?? "",
+    };
+  });
+}
+
+/**
  * generateDocxReport(projectData, fileName)
- * Alias for buildDocx — accepts the orchestrator's projectData shape.
+ * Accepts the orchestrator's projectData shape and emits a fully-populated
+ * .docx with ALL sections present (honest empty-state fallback when data is
+ * missing rather than silently dropping the section).
+ *
+ * Section order:
+ *   1. Research Summary
+ *   2. Identified Gaps
+ *   3. Innovation Angle
+ *   4. Sources Behind This Angle
+ *   5. Architecture
+ *   6. Tech Stack
+ *   7. Roadmap
+ *   8. Resources
  */
 export async function generateDocxReport(projectData, fileName = "output.docx") {
-  // Map orchestrator's projectData keys → publisher draft keys
-  const draft = {
-    topic: projectData.title ?? projectData.normalized_problem,
-    innovation_angles: projectData.chosen_angle ? [projectData.chosen_angle] : [],
-    plan: projectData.plan,
-    resources: projectData.resources ?? { datasets: [], repos: [], apis: [] },
-  };
-  return buildDocx(draft, fileName);
+  const angle     = projectData.chosen_angle ?? {};
+  const plan      = projectData.plan ?? {};
+  const resources = projectData.resources ?? {};
+  const sources   = projectData.sources   ?? {};
+
+  // ── Resolve evidence sources for the chosen angle ──────────────────────────
+  const evidenceIds     = angle.evidence_ids ?? [];
+  const resolvedSources = resolveEvidenceSources(evidenceIds, sources);
+
+  // ── Gaps ───────────────────────────────────────────────────────────────────
+  const gaps = Array.isArray(projectData.gaps) ? projectData.gaps : [];
+
+  // ── Tech stack ─────────────────────────────────────────────────────────────
+  const techStack  = Array.isArray(plan.tech_stack)  ? plan.tech_stack  : [];
+  const milestones = Array.isArray(plan.milestones)  ? plan.milestones  : [];
+
+  const children = [
+    // ── Cover ────────────────────────────────────────────────────────────────
+    heading("ResearchOS Project Report", HeadingLevel.HEADING_1),
+    new Paragraph({
+      children: [
+        run(projectData.title ?? projectData.normalized_problem ?? "Research Project", {
+          bold: true, size: 48, color: AMBER,
+        }),
+      ],
+      spacing: { after: 400 },
+    }),
+    spacer(),
+
+    // ── 1. Research Summary ──────────────────────────────────────────────────
+    heading("Research Summary", HeadingLevel.HEADING_2),
+    body(projectData.evidence_summary || "(No evidence summary available.)"),
+    spacer(),
+
+    // ── 2. Identified Gaps ───────────────────────────────────────────────────
+    heading("Identified Gaps", HeadingLevel.HEADING_2),
+    ...(gaps.length > 0
+      ? gaps.map((g) => bullet(typeof g === "string" ? g : g.description ?? JSON.stringify(g)))
+      : [body("(No gaps identified.)")]),
+    spacer(),
+
+    // ── 3. Innovation Angle ──────────────────────────────────────────────────
+    heading("Innovation Angle", HeadingLevel.HEADING_2),
+    body(angle.angle || "(No innovation angle selected.)"),
+    ...(angle.why_novel
+      ? [
+          new Paragraph({
+            children: [run("Why This Is Novel", { bold: true, size: 22, color: NAVY })],
+            spacing: { after: 80 },
+          }),
+          body(angle.why_novel),
+        ]
+      : []),
+    spacer(),
+
+    // ── 4. Sources Behind This Angle ─────────────────────────────────────────
+    heading("Sources Behind This Angle", HeadingLevel.HEADING_2),
+    ...(resolvedSources.length > 0
+      ? resolvedSources.map((s) =>
+          new Paragraph({
+            bullet: { level: 0 },
+            children: [
+              run(s.title, { size: 22, color: "333333" }),
+              ...(s.url ? [run(`  — ${s.url}`, { size: 20, color: GREY, italics: true })] : []),
+            ],
+            spacing: { after: 80 },
+          })
+        )
+      : [body("(No evidence sources linked to this angle.)")]),
+    spacer(),
+
+    // ── 5. Architecture ───────────────────────────────────────────────────────
+    heading("Architecture", HeadingLevel.HEADING_2),
+    body(plan.architecture || "(No architecture description available.)"),
+    spacer(),
+
+    // ── 6. Tech Stack ─────────────────────────────────────────────────────────
+    heading("Tech Stack", HeadingLevel.HEADING_2),
+    ...(techStack.length > 0 ? techStack.map(bullet) : [body("(No tech stack specified.)")]),
+    spacer(),
+
+    // ── 7. Roadmap ────────────────────────────────────────────────────────────
+    heading("Roadmap", HeadingLevel.HEADING_2),
+    ...(milestones.length > 0
+      ? [spacer(), buildMilestoneTable(milestones), spacer()]
+      : [body("(No milestones defined.)")]),
+    spacer(),
+
+    // ── 8. Resources ──────────────────────────────────────────────────────────
+    heading("Resources", HeadingLevel.HEADING_2),
+    ...((resources.repos ?? []).length > 0
+      ? (resources.repos ?? []).map((r) => bullet(`${r.name} — ${r.url}`))
+      : []),
+    ...((resources.datasets ?? []).length > 0
+      ? (resources.datasets ?? []).map((d) => bullet(d.url ?? d.name ?? String(d)))
+      : []),
+    ...(((resources.repos ?? []).length === 0 && (resources.datasets ?? []).length === 0)
+      ? [body("(No resources curated.)")]
+      : []),
+    spacer(),
+
+    // ── Footer ────────────────────────────────────────────────────────────────
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [
+        run("Generated by ResearchOS · Logic Loops", {
+          size: 18, color: GREY, italics: true,
+        }),
+      ],
+      spacing: { before: 400 },
+    }),
+  ];
+
+  const doc = new Document({
+    styles: {
+      default: {
+        document: {
+          run: { font: "Calibri", size: 22 },
+        },
+      },
+    },
+    sections: [{ children }],
+  });
+
+  const buffer = await Packer.toBuffer(doc);
+  writeFileSync(fileName, buffer);
+  console.log(`[publisherAgent] ✅  .docx written → ${fileName}`);
+  return fileName;
 }
 
 /**
