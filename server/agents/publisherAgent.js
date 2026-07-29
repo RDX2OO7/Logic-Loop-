@@ -26,7 +26,9 @@ import {
   VerticalAlign,
 } from "docx";
 import PptxGenJS from "pptxgenjs";
-import { writeFileSync } from "fs";
+import { writeFileSync, mkdirSync, existsSync } from "fs";
+import path from "path";
+
 
 // ─── Palette constants ────────────────────────────────────────────────────────
 const NAVY  = "15193D";
@@ -274,6 +276,10 @@ export async function buildDocx(draft, outPath = "output.docx") {
     sections: [{ children }],
   });
 
+  const dir = path.dirname(outPath);
+  if (dir && !existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
   const buffer = await Packer.toBuffer(doc);
   writeFileSync(outPath, buffer);
   console.log(`[publisherAgent] ✅  .docx written → ${outPath}`);
@@ -482,6 +488,10 @@ export function buildPptx(draft, outPath = "output.pptx") {
     });
   }
 
+  const dir = path.dirname(outPath);
+  if (dir && !existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
   pptx.writeFile({ fileName: outPath });
   console.log(`[publisherAgent] ✅  .pptx written → ${outPath}`);
   return outPath;

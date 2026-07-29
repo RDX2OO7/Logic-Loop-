@@ -25,19 +25,28 @@ const TABS: { id: TabType; label: string; icon: React.ElementType }[] = [
 export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ data }) => {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
+  const docxUrl = data.exports?.docxUrl || data.exports?.docxPath;
+  const pptxUrl = data.exports?.pptxUrl || data.exports?.pptxPath;
+
+  // Vite dev middleware serves /exports/* on the same origin (port 3000).
+  // If it starts with '/', use it as-is (relative to origin).
+  // For standalone server mode (e.g. http://localhost:3001/...) keep the full URL.
+  const docxFullUrl = docxUrl || null;
+  const pptxFullUrl = pptxUrl || null;
+
   const handleExportDocx = () => {
-    if (data.exports?.docxPath) {
-      alert(`Exported report: ${data.exports.docxPath}`);
+    if (docxFullUrl) {
+      window.open(docxFullUrl, '_blank');
     } else {
-      alert("Exporting project plan to .docx format...");
+      alert("Export file not available.");
     }
   };
 
   const handleExportPptx = () => {
-    if (data.exports?.pptxPath) {
-      alert(`Exported deck: ${data.exports.pptxPath}`);
+    if (pptxFullUrl) {
+      window.open(pptxFullUrl, '_blank');
     } else {
-      alert("Exporting project presentation to .pptx format...");
+      alert("Export file not available.");
     }
   };
 
@@ -82,21 +91,39 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ data }) => {
 
         {/* Right Side: Export Buttons */}
         <div className="flex items-center gap-2.5 shrink-0">
-          <button
-            onClick={handleExportDocx}
+          <a
+            href={docxFullUrl || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            download
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[#E3E5F0] bg-white text-[#15193D] hover:bg-[#F4F5FA] text-[13px] font-medium transition-colors shadow-2xs"
+            onClick={(e) => {
+              if (!docxFullUrl) {
+                e.preventDefault();
+                alert("Export file not available.");
+              }
+            }}
           >
             <FileText className="w-4 h-4 text-[#15193D]" />
             <span>Export .docx</span>
-          </button>
+          </a>
 
-          <button
-            onClick={handleExportPptx}
+          <a
+            href={pptxFullUrl || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            download
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[#E3E5F0] bg-white text-[#15193D] hover:bg-[#F4F5FA] text-[13px] font-medium transition-colors shadow-2xs"
+            onClick={(e) => {
+              if (!pptxFullUrl) {
+                e.preventDefault();
+                alert("Export file not available.");
+              }
+            }}
           >
             <Presentation className="w-4 h-4 text-[#15193D]" />
             <span>Export .pptx</span>
-          </button>
+          </a>
         </div>
       </div>
 

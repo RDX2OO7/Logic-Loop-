@@ -91,6 +91,8 @@ export interface CopilotData {
   generatedAt?: string;
   executionTimeSec?: number;
   exports?: {
+    docxUrl?: string;
+    pptxUrl?: string;
     docxPath?: string;
     pptxPath?: string;
   };

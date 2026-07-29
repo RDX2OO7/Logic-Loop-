@@ -1,5 +1,6 @@
 import React from 'react';
-import { Plus, FolderKanban, Settings, Sparkles, FileText, ChevronRight, Layers } from 'lucide-react';
+import { Plus, FolderKanban, Settings, Sparkles, FileText, ChevronRight, Layers, Terminal } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface LeftRailProps {
   currentScreen: 'input' | 'progress' | 'results';
@@ -14,6 +15,7 @@ export const LeftRail: React.FC<LeftRailProps> = ({
   onNewIdea,
   activeProjectName = "Campus Food Waste AI"
 }) => {
+  const navigate = useNavigate();
   return (
     <aside className="w-[240px] min-w-[240px] bg-[#15193D] text-white h-screen fixed left-0 top-0 flex flex-col z-30 border-r border-[#1F2340]">
       {/* Top Header & Serif Wordmark */}
@@ -129,6 +131,13 @@ export const LeftRail: React.FC<LeftRailProps> = ({
           <button className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] text-white/70 hover:text-white hover:bg-white/5 transition-colors">
             <Settings className="w-4 h-4 text-white/60" />
             <span>Settings</span>
+          </button>
+          <button
+            onClick={() => navigate('/terminal')}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+          >
+            <Terminal className="w-4 h-4 text-[#F5A623]" />
+            <span>Terminal</span>
           </button>
         </div>
       </nav>

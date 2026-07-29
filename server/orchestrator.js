@@ -6,6 +6,12 @@ import { runProjectPlannerAgent, pickStrongestAngle } from "./agents/projectPlan
 import { runResourceCuratorAgent } from "./agents/resourceCuratorAgent.js";
 import { runCriticAgent } from "./agents/criticAgent.js";
 import { generateDocxReport, generatePptxDeck } from "./agents/publisherAgent.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Absolute path to server/exports/ — works regardless of CWD (Vite plugin or node index.js)
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const EXPORTS_DIR = path.join(__dirname, "exports");
 
 const MAX_REVISION_PASSES = 2;
 
@@ -99,15 +105,19 @@ export async function runResearchOSPipeline(ideaRaw, studentId, deps = defaultDe
   };
 
   step("publisher: rendering docx + pptx");
-  const docxPath = await deps.docxPublisher(projectData, `output-${studentId}.docx`);
-  const pptxPath = await deps.pptxPublisher(projectData, `output-${studentId}.pptx`);
+  const ts = Date.now();
+  const docxFile = `output-${studentId}-${ts}.docx`;
+  const pptxFile = `output-${studentId}-${ts}.pptx`;
+  await deps.docxPublisher(projectData, path.join(EXPORTS_DIR, docxFile));
+  await deps.pptxPublisher(projectData, path.join(EXPORTS_DIR, pptxFile));
   step("publisher: done");
 
   return {
     status: criticResult.approved ? "approved" : "approved_with_unresolved_issues",
     projectData,
     critic: criticResult,
-    exports: { docxPath, pptxPath },
+    exports: { docxUrl: `/exports/${docxFile}`, pptxUrl: `/exports/${pptxFile}` },
     log,
   };
 }
+

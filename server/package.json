@@ -9,8 +9,10 @@
   },
   "dependencies": {
     "@google/genai": "^2.13.0",
+    "cors": "^2.8.6",
     "docx": "^9.7.1",
     "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "fast-xml-parser": "^5.10.1",
     "ml-kmeans": "^7.0.1",
     "pptxgenjs": "^4.0.1"
