@@ -11,17 +11,34 @@
     {
       "angle": "Development and rigorous empirical evaluation of AI-driven 'smart plate' or 'smart inventory' systems in diverse hostel settings to quantify their actual impact on food waste reduction and operational efficiency.",
       "why_novel": "While several GitHub repositories propose AI solutions for hostel food waste (e.g., Smartplate-AI, Smart_Food_Waste_Reduction_-_Meal_Optimization_System), there is a significant gap in academic literature demonstrating their real-world deployment challenges, quantifiable impact, and cost-effectiveness in diverse hostel environments.",
-      "evidence_ids": ["github-0-ms1fkmrw", "github-1-ms1fkmrw", "github-2-ms1fkmrw", "github-3-ms1fkmrw", "github-4-ms1fkmrw", "arxiv-0-ms1fkmf6"]
+      "evidence_ids": [
+        "github-0-ms1fkmrw",
+        "github-1-ms1fkmrw",
+        "github-2-ms1fkmrw",
+        "github-3-ms1fkmrw",
+        "github-4-ms1fkmrw",
+        "arxiv-0-ms1fkmf6"
+      ]
     },
     {
       "angle": "Designing and testing gamified or incentive-based programs for hostel occupants, integrated with a food waste tracking system, to encourage mindful consumption and portion control.",
       "why_novel": "Existing web sources suggest 'plan your meals' and 'portion control' for guests but lack systematic, data-driven approaches to influence behavior. This innovation would combine the data capabilities of existing AI concepts with behavioral science to actively engage guests in waste reduction.",
-      "evidence_ids": ["web-0-ms1fkmwa", "web-3-ms1fkmwa", "github-1-ms1fkmrw", "github-4-ms1fkmrw"]
+      "evidence_ids": [
+        "web-0-ms1fkmwa",
+        "web-3-ms1fkmwa",
+        "github-1-ms1fkmrw",
+        "github-4-ms1fkmrw"
+      ]
     },
     {
       "angle": "Investigating and piloting scalable, cost-effective on-site food waste composting or bio-digestion solutions specifically designed for the logistical and spatial constraints of typical hostels, along with exploring local food donation networks.",
       "why_novel": "While the broader 'circular economy for food industry' is mentioned and hotels engage in composting, specific solutions for hostels beyond reduction are not detailed. This angle focuses on processing unavoidable waste within the hostel context, providing end-of-life solutions aligned with sustainability goals.",
-      "evidence_ids": ["openalex-2-ms1fkocg", "openalex-3-ms1fkocg", "web-2-ms1fkmwa", "web-4-ms1fkmwa"]
+      "evidence_ids": [
+        "openalex-2-ms1fkocg",
+        "openalex-3-ms1fkocg",
+        "web-2-ms1fkmwa",
+        "web-4-ms1fkmwa"
+      ]
     }
   ],
   "_stripped_hallucinated_citations": 0,
