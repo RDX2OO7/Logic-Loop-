@@ -8,4 +8,5 @@ console.log(JSON.stringify({
   log: result.log,
   criticApproved: result.critic?.approved,
   exports: result.exports,
+  _debug_scores: result.sources?._debug_scores,
 }, null, 2));

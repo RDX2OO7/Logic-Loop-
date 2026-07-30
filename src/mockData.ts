@@ -95,29 +95,116 @@ export const mockCopilotData: CopilotData = {
   ],
   plan: {
     architecture: "Microservices architecture utilizing FastFCN edge camera nodes, FastAPI ingestion backend, Redis stream buffer, Temporal Fusion Transformer for demand prediction, and Next.js kitchen management dashboard.",
-    tech_stack: ["Python 3.11", "PyTorch", "YOLOv8", "FastAPI", "React", "Tailwind CSS", "PostgreSQL", "Mosquitto MQTT"],
+    tech_stack: ["Python 3.11", "PyTorch", "YOLOv8", "FastAPI", "React 18", "Next.js 14", "Tailwind CSS", "PostgreSQL", "Mosquitto MQTT", "Docker"],
+    apis_needed: ["Open-Meteo Historical Weather API", "University Campus Academic Calendar API"],
     milestones: [
       {
         name: "Phase 1: Dataset & Edge Setup",
         description: "Collect 2,000 campus tray images, train initial YOLOv8 classification model, assemble ESP32 hardware prototype.",
-        duration_days: 7
+        duration_days: 7,
+        subtasks: [
+          "Annotate 2,000 tray image dataset using Roboflow",
+          "Train baseline YOLOv8 nano model for low-latency edge inference",
+          "Flash ESP32-CAM firmware with encrypted MQTT client",
+          "Set up local Mosquitto MQTT broker and Redis stream listener"
+        ],
+        deliverables: ["Trained YOLOv8 weights file (.pt & .onnx)", "Operational ESP32 hardware node prototype"],
+        tech_focus: ["Python", "YOLOv8", "PyTorch", "ESP32", "MQTT"]
       },
       {
         name: "Phase 2: Demand Prediction Engine",
         description: "Ingest student timetable & weather APIs, train Temporal Fusion Transformer, achieve <8% MAPE prediction error.",
-        duration_days: 10
+        duration_days: 10,
+        subtasks: [
+          "Build weather & timetable API ingestion pipeline in FastAPI",
+          "Feature engineering for campus density & exam schedule indicators",
+          "Train PyTorch Forecasting Temporal Fusion Transformer (TFT)",
+          "Implement model evaluation suite and automated retraining triggers"
+        ],
+        deliverables: ["Demand forecasting microservice endpoint", "Validated model with <8% MAPE error"],
+        tech_focus: ["FastAPI", "PyTorch", "Pandas", "TimescaleDB"]
       },
       {
-        name: "Phase 3: Kitchen Integration UI",
-        description: "Build kitchen display system with dynamic prep alerts, real-time waste analytics, and exportable reports.",
-        duration_days: 7
+        name: "Phase 3: Kitchen Integration UI & WebSockets",
+        description: "Build Next.js kitchen display system with dynamic prep alerts, real-time waste analytics, and exportable reports.",
+        duration_days: 7,
+        subtasks: [
+          "Develop React/Next.js UI components using Tailwind CSS & Lucide icons",
+          "Implement Zustand client state and TanStack Query data caching",
+          "Integrate WebSocket live feed for real-time kitchen station alerts",
+          "Build interactive metrics dashboard with Recharts visualization"
+        ],
+        deliverables: ["Full-featured Kitchen Display System (KDS) UI", "Live WebSocket telemetry streaming"],
+        tech_focus: ["React 18", "Next.js 14", "Tailwind CSS", "Zustand", "WebSockets"]
       },
       {
-        name: "Phase 4: Pilot Test & Verification",
+        name: "Phase 4: Pilot Deployment & Verification",
         description: "Deploy 2 camera nodes in hostel dining hall for 4 days, measure over-prep reduction vs baseline.",
-        duration_days: 4
+        duration_days: 4,
+        subtasks: [
+          "Containerize application services with Docker & Docker Compose",
+          "Set up CI/CD pipeline with GitHub Actions for automated deployment",
+          "Mount 2 camera nodes in campus dining hall prep area",
+          "Conduct 4-day operational validation and calculate food waste savings"
+        ],
+        deliverables: ["Live production deployment on Render & Vercel", "Verified 4-day waste reduction evaluation report"],
+        tech_focus: ["Docker", "GitHub Actions", "Vercel", "Render", "Sentry"]
       }
-    ]
+    ],
+    tech_stack_breakdown: {
+      frontend_ui: ["React 18", "Next.js 14 App Router", "Tailwind CSS", "Zustand State Management", "Recharts & Lucide Icons"],
+      backend_api: ["Python 3.11", "FastAPI Async Web Framework", "WebSockets / SSE", "Mosquitto MQTT Broker"],
+      database_storage: ["PostgreSQL 16 with TimescaleDB Extension", "Redis Stream & Caching Cluster", "MinIO / S3 Object Storage"],
+      ai_ml_data: ["PyTorch 2.2", "YOLOv8 Edge Inference Engine", "Temporal Fusion Transformer (TFT)", "ONNX Runtime"],
+      dev_ops_deployment: ["Docker Containerization", "Vercel Frontend Hosting", "Render Cloud API Services", "GitHub Actions CI/CD"]
+    },
+    ui_implementation_plan: {
+      design_system: "Modern high-contrast dark navy theme (#15193D) with vibrant amber accents (#F5A623), clean card elevation, responsive flex/grid layouts, dynamic micro-animations, and real-time status pills.",
+      core_views: [
+        {
+          page_name: "Executive Analytics Dashboard",
+          purpose: "Provides kitchen managers real-time total waste metrics, campus meal attendance forecasts, and cost savings widgets.",
+          key_components: ["Live Waste Meter KPI Cards", "Meal Forecast Comparison Chart", "Real-Time Prep Advisory Widget"]
+        },
+        {
+          page_name: "Live Kitchen Prep Display (KDS)",
+          purpose: "High-visibility tablet interface for prep station chefs showing real-time dish volume recommendations updated every 15 minutes.",
+          key_components: ["Station Dish Queues", "Prep Alert Cards", "Quick-Adjust Serving Size Buttons"]
+        },
+        {
+          page_name: "Tray Computer Vision Telemetry",
+          purpose: "Monitors edge node camera health, frame inference logs, and waste classification accuracy metrics.",
+          key_components: ["Live Camera Video Feed", "YOLO Bounding Box Inspector", "Node Connection Status Grid"]
+        }
+      ],
+      state_management: "Zustand for client UI state, TanStack Query for server state caching with auto-retry, and native WebSockets for streaming live tray analytics without page reloads."
+    },
+    data_flow_and_endpoints: [
+      {
+        endpoint: "POST /api/v1/telemetry/frame",
+        method: "POST",
+        purpose: "Ingests encrypted tray images from ESP32 edge nodes and runs YOLOv8 waste volume classification.",
+        payload_summary: "{ node_id: string, image_b64: string, timestamp: ISO8601 } → { waste_pct: float, items: [] }"
+      },
+      {
+        endpoint: "GET /api/v1/forecast/meal-prep",
+        method: "GET",
+        purpose: "Calculates optimized cooking quantities for upcoming meal windows based on student schedules and weather.",
+        payload_summary: "{ meal_type: string, date: string } → { recommended_kg: number, confidence: float }"
+      },
+      {
+        endpoint: "WS /api/v1/ws/live-feed",
+        method: "WS",
+        purpose: "Streams real-time waste alerts and queue adjustments directly to kitchen display tablets.",
+        payload_summary: "Subscribes to station topics; pushes { station_id: string, delta_prep_pct: number }"
+      }
+    ],
+    deployment_strategy: {
+      hosting_environments: "Frontend UI hosted on Vercel Edge Network. Core FastAPI Backend & Redis hosted on Render Cloud. PostgreSQL DB managed on Supabase with TimescaleDB for time-series logs.",
+      ci_cd_pipeline: "GitHub Actions workflow triggers on 'main' push: linting, pytest suite, Docker image build pushed to GitHub Container Registry, followed by automated Vercel & Render zero-downtime deployment.",
+      environment_variables: ["DATABASE_URL", "REDIS_URL", "MQTT_BROKER_HOST", "JWT_SECRET", "NEXT_PUBLIC_WS_URL"],
+      monitoring_and_logs: "Sentry for client and API error tracking, Prometheus metrics endpoint for request latency monitoring, and Grafana dashboard for kitchen sensor uptime."
+    }
   },
   resources: {
     datasets: [

@@ -62,12 +62,54 @@ export interface Milestone {
   name: string;
   description: string;
   duration_days: number;
+  subtasks?: string[];
+  deliverables?: string[];
+  tech_focus?: string[];
+}
+
+export interface TechStackBreakdown {
+  frontend_ui: string[];
+  backend_api: string[];
+  database_storage: string[];
+  ai_ml_data: string[];
+  dev_ops_deployment: string[];
+}
+
+export interface UIViewDetail {
+  page_name: string;
+  purpose: string;
+  key_components: string[];
+}
+
+export interface UIImplementationPlan {
+  design_system: string;
+  core_views: UIViewDetail[];
+  state_management: string;
+}
+
+export interface APIEndpointSpec {
+  endpoint: string;
+  method: string;
+  purpose: string;
+  payload_summary: string;
+}
+
+export interface DeploymentStrategy {
+  hosting_environments: string;
+  ci_cd_pipeline: string;
+  environment_variables: string[];
+  monitoring_and_logs: string;
 }
 
 export interface Plan {
   architecture: string;
   tech_stack: string[];
   milestones: Milestone[];
+  apis_needed?: string[];
+  tech_stack_breakdown?: TechStackBreakdown;
+  ui_implementation_plan?: UIImplementationPlan;
+  data_flow_and_endpoints?: APIEndpointSpec[];
+  deployment_strategy?: DeploymentStrategy;
 }
 
 export interface ResourceItem {

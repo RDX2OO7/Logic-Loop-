@@ -1,5 +1,6 @@
 import { runDiscoveryAgent } from "./agents/discoveryAgent.js";
 import { runDeepSearchAgent } from "./services/deepSearch.js";
+import { filterRelevantSources } from "./services/relevanceFilter.js";
 import { runClusteringAgent } from "./agents/clusteringAgent.js";
 import { runGapReasoningOnSources } from "./agents/gapInnovationAgent.js";
 import { runProjectPlannerAgent, rankAnglesByImpact } from "./agents/projectPlannerAgent.js";
@@ -18,6 +19,7 @@ const MAX_REVISION_PASSES = 2;
 const defaultDeps = {
   discoveryAgent: runDiscoveryAgent,
   deepSearchAgent: runDeepSearchAgent,
+  relevanceFilterAgent: filterRelevantSources,
   clusteringAgent: runClusteringAgent,
   gapAgent: runGapReasoningOnSources,
   plannerAgent: runProjectPlannerAgent,
@@ -37,7 +39,7 @@ function flattenSourceIds(deepSearchResult) {
 }
 
 /**
- * Phase 1: Discovery, DeepSearch, Clustering, Gap & Innovation reasoning, and Angle Ranking.
+ * Phase 1: Discovery, DeepSearch, Relevance Filtering, Clustering, Gap & Innovation reasoning, and Angle Ranking.
  * Does NOT auto-pick a single angle — returns ALL ranked angles for the student to select from.
  */
 export async function runDiscoveryPhase(ideaRaw, studentId, deps = defaultDeps) {
@@ -54,15 +56,20 @@ export async function runDiscoveryPhase(ideaRaw, studentId, deps = defaultDeps) 
 
   step("deepSearch: start");
   const deepSearchResult = await deps.deepSearchAgent(discovery.normalized_problem);
-  const sourceIds = flattenSourceIds(deepSearchResult);
-  step(`deepSearch: ${sourceIds.length} sources found`);
+  step(`deepSearch: ${flattenSourceIds(deepSearchResult).length} sources found`);
+
+  step("relevanceFilter: start");
+  const filteredResult = await deps.relevanceFilterAgent(deepSearchResult, discovery.normalized_problem);
+  step(`relevanceFilter: kept ${filteredResult._kept_count}, dropped ${filteredResult._dropped_count} off-topic source(s)`);
+
+  const sourceIds = flattenSourceIds(filteredResult);
 
   step("clustering: start");
-  const clustering = await deps.clusteringAgent(deepSearchResult);
+  const clustering = await deps.clusteringAgent(filteredResult);
   step(`clustering: ${clustering.clusters?.length || 0} clusters`);
 
   step("gapAgent: start");
-  const gapResult = await deps.gapAgent(deepSearchResult, discovery.normalized_problem);
+  const gapResult = await deps.gapAgent(filteredResult, discovery.normalized_problem);
   if (gapResult.insufficient_evidence || !gapResult.innovation_angles?.length) {
     step("gapAgent: insufficient evidence, halting");
     return { status: "insufficient_evidence", evidence_summary: gapResult.evidence_summary, log };
@@ -76,7 +83,7 @@ export async function runDiscoveryPhase(ideaRaw, studentId, deps = defaultDeps) 
     status: "angles_ready",
     studentId,
     normalized_problem: discovery.normalized_problem,
-    sources: deepSearchResult,
+    sources: filteredResult,
     sourceIds,
     clusters: clustering.clusters || [],
     evidence_summary: gapResult.evidence_summary,

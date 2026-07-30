@@ -25,6 +25,7 @@ async function main() {
   const r2 = await runDiscoveryPhase("smart hostel waste", "student2", {
     discoveryAgent: async () => ({ needs_clarification: false, normalized_problem: "smart hostel waste" }),
     deepSearchAgent: async () => ({ papers: [{ id: "p1" }], repos: [], web: [] }),
+    relevanceFilterAgent: async (result) => ({ ...result, _kept_count: result.papers?.length || 0, _dropped_count: 0 }),
     clusteringAgent: async () => ({ clusters: [] }),
     gapAgent: async () => fakeGapOutput,
   });
