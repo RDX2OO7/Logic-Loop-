@@ -3,7 +3,7 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import { runDiscoveryPhase, runPlanningPhase, runResearchOSPipeline } from "./orchestrator.js";
-
+import { streamFileById, listProjects, getProjectById } from "./db/projectStore.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const EXPORTS_DIR = path.join(__dirname, "exports");
 
@@ -12,8 +12,6 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
-app.use("/exports", express.static(EXPORTS_DIR));
-
 // In-memory stores for drafts and completed projects
 const draftStore = new Map();
 const projectStore = new Map();
@@ -133,27 +131,33 @@ app.post("/api/plan", async (req, res) => {
 });
 
 // GET /api/projects
-app.get("/api/projects", (req, res) => {
-  res.json(Array.from(projectStore.values()));
+app.get("/api/projects", async (req, res) => {
+  try {
+    const projects = await listProjects(req.query.studentId || "anonymous");
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // GET /api/projects/:id
-app.get("/api/projects/:id", (req, res) => {
-  const proj = projectStore.get(req.params.id);
-  if (!proj) {
-    return res.status(404).json({ error: "Project not found" });
+app.get("/api/projects/:id", async (req, res) => {
+  try {
+    const project = await getProjectById(req.params.id);
+    if (!project) return res.status(404).json({ error: "Not found" });
+    res.json(project);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  res.json(proj);
 });
 
 // GET /api/files/:fileId
-app.get("/api/files/:fileId", (req, res) => {
-  const filePath = path.join(EXPORTS_DIR, req.params.fileId);
-  res.sendFile(filePath, (err) => {
-    if (err) {
-      res.status(404).json({ error: "File not found" });
-    }
-  });
+app.get("/api/files/:fileId", async (req, res) => {
+  try {
+    await streamFileById(req.params.fileId, res);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Legacy pipeline endpoint

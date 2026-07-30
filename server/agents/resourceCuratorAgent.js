@@ -1,5 +1,17 @@
 import { searchGitHub } from "../services/deepSearch.js";
 
+/**
+ * Extract the first `n` meaningful words from a query for dataset APIs.
+ * Long multi-word phrases return 0 results from Kaggle and HuggingFace.
+ */
+function shortQuery(query, words = 2) {
+  return (query || "")
+    .split(/\s+/)
+    .filter((w) => w.length > 2) // drop tiny words like "an", "to", "in"
+    .slice(0, words)
+    .join(" ");
+}
+
 export async function searchHuggingFaceDatasets(query, limit = 5) {
   try {
     const headers = process.env.HF_TOKEN ? { Authorization: `Bearer ${process.env.HF_TOKEN}` } : {};
@@ -36,10 +48,13 @@ export async function searchKaggleDatasets(query, limit = 5) {
 }
 
 export async function runResourceCuratorAgent(techQuery, datasetQuery) {
+  // Dataset APIs return 0 results for long multi-word phrases — use first 2 keywords
+  const shortDatasetQuery = shortQuery(datasetQuery, 2);
+
   const [repos, hfDatasets, kaggleDatasets] = await Promise.all([
     searchGitHub(techQuery, 5),
-    searchHuggingFaceDatasets(datasetQuery, 5),
-    searchKaggleDatasets(datasetQuery, 5),
+    searchHuggingFaceDatasets(shortDatasetQuery, 5),
+    searchKaggleDatasets(shortDatasetQuery, 5),
   ]);
 
   return {
@@ -48,3 +63,4 @@ export async function runResourceCuratorAgent(techQuery, datasetQuery) {
     apis: [],
   };
 }
+

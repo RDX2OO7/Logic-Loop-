@@ -5,7 +5,8 @@ import { runGapReasoningOnSources } from "./agents/gapInnovationAgent.js";
 import { runProjectPlannerAgent, rankAnglesByImpact } from "./agents/projectPlannerAgent.js";
 import { runResourceCuratorAgent } from "./agents/resourceCuratorAgent.js";
 import { runCriticAgent } from "./agents/criticAgent.js";
-import { generateDocxReport, generatePptxDeck } from "./agents/publisherAgent.js";
+import { generateDocxBuffer, generatePptxBuffer } from "./agents/publisherAgent.js";
+import { saveProjectRecord } from "./db/projectStore.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -22,8 +23,9 @@ const defaultDeps = {
   plannerAgent: runProjectPlannerAgent,
   curatorAgent: runResourceCuratorAgent,
   criticAgent: runCriticAgent,
-  docxPublisher: generateDocxReport,
-  pptxPublisher: generatePptxDeck,
+  docxPublisher: generateDocxBuffer,
+  pptxPublisher: generatePptxBuffer,
+  projectSaver: saveProjectRecord,
 };
 
 function flattenSourceIds(deepSearchResult) {
@@ -144,16 +146,21 @@ export async function planOneAngle(chosenAngle, phase1Data, studentId, deps = de
   };
 
   step("publisher: rendering docx + pptx");
-  await deps.docxPublisher(projectData, path.join(EXPORTS_DIR, docxFile));
-  await deps.pptxPublisher(projectData, path.join(EXPORTS_DIR, pptxFile));
-  step("publisher: done");
+  const docxBuffer = await deps.docxPublisher(projectData);
+  const pptxBuffer = await deps.pptxPublisher(projectData);
+  step("publisher: buffers rendered");
+
+  step("database: saving project + files");
+  const saved = await deps.projectSaver({ studentId, projectData, critic: criticResult, docxBuffer, pptxBuffer });
+  step("database: saved");
 
   return {
     status: criticResult.approved ? "approved" : "approved_with_unresolved_issues",
     chosen_angle: chosenAngle,
+    projectId: saved.projectId,
     projectData,
     critic: criticResult,
-    exports: { docxUrl: `/exports/${docxFile}`, pptxUrl: `/exports/${pptxFile}` },
+    exports: { docxUrl: `/api/files/${saved.docxFileId}`, pptxUrl: `/api/files/${saved.pptxFileId}` },
     log,
   };
 }

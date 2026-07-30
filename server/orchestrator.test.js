@@ -49,8 +49,9 @@ async function main() {
     },
     curatorAgent: async () => ({ datasets: [], repos: [], apis: [] }),
     criticAgent: async () => ({ approved: true, issues: [] }),
-    docxPublisher: async () => "file.docx",
-    pptxPublisher: async () => "file.pptx",
+    docxPublisher: async () => Buffer.from("fake"),
+    pptxPublisher: async () => Buffer.from("fake"),
+    projectSaver: async () => ({ projectId: "fake", docxFileId: "d1", pptxFileId: "p1" }),
   };
 
   const r3 = await runPlanningPhase(r2, 0, "student3", mockPlannerDeps);

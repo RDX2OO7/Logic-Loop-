@@ -15,6 +15,7 @@
     "express": "^5.2.1",
     "fast-xml-parser": "^5.10.1",
     "ml-kmeans": "^7.0.1",
+    "mongodb": "^7.5.0",
     "pptxgenjs": "^4.0.1"
   }
 }

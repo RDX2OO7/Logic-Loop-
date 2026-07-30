@@ -288,7 +288,13 @@ export async function buildDocx(draft, outPath = "output.docx") {
 
 // ─── .pptx builder ───────────────────────────────────────────────────────────
 
-export function buildPptx(draft, outPath = "output.pptx") {
+export async function generatePptxBuffer(projectData) {
+  const draft = {
+    topic: projectData.title ?? projectData.normalized_problem,
+    innovation_angles: projectData.chosen_angle ? [projectData.chosen_angle] : [],
+    plan: projectData.plan,
+    resources: projectData.resources ?? { datasets: [], repos: [], apis: [] },
+  };
   const { topic, plan, innovation_angles, resources } = draft;
   const angle = innovation_angles?.[0] ?? {};
   const milestones = plan?.milestones ?? [];
@@ -488,13 +494,8 @@ export function buildPptx(draft, outPath = "output.pptx") {
     });
   }
 
-  const dir = path.dirname(outPath);
-  if (dir && !existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-  pptx.writeFile({ fileName: outPath });
-  console.log(`[publisherAgent] ✅  .pptx written → ${outPath}`);
-  return outPath;
+  const buffer = await pptx.write({ outputType: "nodebuffer" });
+  return buffer;
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
@@ -560,7 +561,7 @@ function resolveEvidenceSources(evidenceIds = [], sources = {}) {
  *   7. Roadmap
  *   8. Resources
  */
-export async function generateDocxReport(projectData, fileName = "output.docx") {
+export async function generateDocxBuffer(projectData) {
   const angle     = projectData.chosen_angle ?? {};
   const plan      = projectData.plan ?? {};
   const resources = projectData.resources ?? {};
@@ -686,22 +687,18 @@ export async function generateDocxReport(projectData, fileName = "output.docx") 
   });
 
   const buffer = await Packer.toBuffer(doc);
-  writeFileSync(fileName, buffer);
-  console.log(`[publisherAgent] ✅  .docx written → ${fileName}`);
-  return fileName;
+  return buffer;
 }
 
-/**
- * generatePptxDeck(projectData, fileName)
- * Alias for buildPptx — accepts the orchestrator's projectData shape.
- */
-export function generatePptxDeck(projectData, fileName = "output.pptx") {
-  const draft = {
-    topic: projectData.title ?? projectData.normalized_problem,
-    innovation_angles: projectData.chosen_angle ? [projectData.chosen_angle] : [],
-    plan: projectData.plan,
-    resources: projectData.resources ?? { datasets: [], repos: [], apis: [] },
-  };
-  return buildPptx(draft, fileName);
+export async function generateDocxReport(projectData, outputPath) {
+  const buffer = await generateDocxBuffer(projectData);
+  writeFileSync(outputPath, buffer);
+  return outputPath;
+}
+
+export async function generatePptxDeck(projectData, outputPath) {
+  const buffer = await generatePptxBuffer(projectData);
+  writeFileSync(outputPath, buffer);
+  return outputPath;
 }
 
