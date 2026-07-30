@@ -30,7 +30,7 @@ export const IdeaInputScreen: React.FC<IdeaInputScreenProps> = ({ onSubmitIdea }
     <div className="flex-1 min-h-screen bg-white flex flex-col justify-center items-center px-8 py-16">
       {/* Center Column Container */}
       <div className="w-full max-w-[680px] space-y-8">
-        
+
         {/* Header Block */}
         <div className="space-y-3">
           {/* Eyebrow Label with Amber-Tint Icon Badge */}
@@ -51,7 +51,7 @@ export const IdeaInputScreen: React.FC<IdeaInputScreenProps> = ({ onSubmitIdea }
 
         {/* Input Card Container */}
         <form onSubmit={handleSubmit} className="relative bg-[#F4F5FA] border border-[#E3E5F0] rounded-[16px] p-5 shadow-sm hover:border-[#15193D]/20 transition-all duration-150">
-          
+
           {/* Top Control Bar inside Textarea Card (Language Selector) */}
           <div className="flex items-center justify-between mb-3 border-b border-[#E3E5F0]/60 pb-3">
             <span className="text-[12px] font-medium text-[#6B7280] flex items-center gap-1.5">
@@ -94,7 +94,7 @@ export const IdeaInputScreen: React.FC<IdeaInputScreenProps> = ({ onSubmitIdea }
           <textarea
             value={ideaText}
             onChange={(e) => setIdeaText(e.target.value)}
-            placeholder="e.g. Build an AI solution to reduce food waste in college hostels"
+            placeholder="e.g. build an ai tool that can help visually disabled people to use android phone "
             rows={4}
             className="w-full bg-transparent text-[#1F2340] placeholder-[#6B7280] text-[15px] leading-relaxed resize-none focus:outline-none"
           />
@@ -109,11 +109,10 @@ export const IdeaInputScreen: React.FC<IdeaInputScreenProps> = ({ onSubmitIdea }
             <button
               type="submit"
               disabled={!ideaText.trim()}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-[14px] font-semibold transition-all duration-150 ${
-                ideaText.trim()
+              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-[14px] font-semibold transition-all duration-150 ${ideaText.trim()
                   ? 'bg-[#F5A623] text-[#15193D] hover:brightness-105 shadow-sm active:scale-[0.98]'
                   : 'bg-[#E3E5F0] text-[#6B7280] cursor-not-allowed'
-              }`}
+                }`}
             >
               <span>Generate project plan</span>
               <ArrowRight className="w-4 h-4" />

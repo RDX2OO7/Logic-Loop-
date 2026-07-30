@@ -81,12 +81,17 @@ export const TabOverview: React.FC<TabOverviewProps> = ({ data }) => {
           </div>
 
           <div className="text-[14px] text-[#1F2340] leading-relaxed space-y-3">
-            <p>
-              This verified project plan details an end-to-end computer vision and temporal demand forecasting platform designed to mitigate institutional food waste in hostel dining environments.
-            </p>
-            <p>
-              By fusing edge RGB-D plate-waste volume scanning with university course schedule attendance predictors, the system enables continuous closed-loop feedback for kitchen meal preparation staff, targeting a <strong>34% reduction in daily food over-preparation</strong>.
-            </p>
+            {data.plan.architecture ? (
+              <p>{data.plan.architecture}</p>
+            ) : null}
+            {data.evidence_summary ? (
+              <p className="text-[13px] text-[#6B7280] italic bg-white p-3 rounded-lg border border-[#E3E5F0]">
+                {data.evidence_summary}
+              </p>
+            ) : null}
+            {!data.plan.architecture && !data.evidence_summary && (
+              <p>Verified project architecture and technical thesis formulated from research evidence.</p>
+            )}
           </div>
 
           {/* Tech Stack Pills */}

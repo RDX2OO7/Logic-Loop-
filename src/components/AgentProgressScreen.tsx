@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Loader2, Sparkles, Search, Network, Lightbulb, Compass, Database, ShieldAlert, FileCheck, ArrowRight, RefreshCw } from 'lucide-react';
+import { Check, Loader2, Sparkles, Search, Network, Lightbulb, Compass, Database, ShieldAlert, FileCheck, RefreshCw } from 'lucide-react';
+import { readSSEResponse } from '../utils/sse';
+import { Phase1Result } from '../types';
 
 interface AgentItem {
   id: string;
@@ -18,23 +20,23 @@ const AGENTS: AgentItem[] = [
     icon: Sparkles,
     description: 'Scanning domain literature and defining problem boundary',
     activeDescription: 'Deconstructing core problem vectors and operational constraints...',
-    completedDescription: 'Identified core problem boundary and domain keyphrases'
+    completedDescription: 'Identified core problem boundary and domain keyphrases',
   },
   {
     id: 'deepsearch',
     name: 'DeepSearch Agent',
     icon: Search,
     description: 'Gathering academic papers, open repositories, and technical web signals',
-    activeDescription: 'Querying arXiv, GitHub, and IEEE Xplore index databases...',
-    completedDescription: 'Retrieved 14 academic papers & 8 open-source repositories'
+    activeDescription: 'Querying arXiv, GitHub, Tavily, and OpenAlex index databases...',
+    completedDescription: 'Retrieved academic papers, repos & web signals',
   },
   {
     id: 'clustering',
     name: 'Clustering Agent',
     icon: Network,
     description: 'Synthesizing research themes and mapping domain clusters',
-    activeDescription: 'Clustering 42 raw technical signals into coherent thematic pillars...',
-    completedDescription: 'Synthesized 4 core research clusters'
+    activeDescription: 'Clustering technical signals into coherent thematic pillars...',
+    completedDescription: 'Synthesized core research clusters',
   },
   {
     id: 'gap_innovation',
@@ -42,7 +44,7 @@ const AGENTS: AgentItem[] = [
     icon: Lightbulb,
     description: 'Identifying unaddressed gaps & formulating novel innovation angles',
     activeDescription: 'Analyzing literature voids to formulate defensible project angles...',
-    completedDescription: 'Formulated 3 distinct innovation angles'
+    completedDescription: 'Formulated innovation angles grounded in sources',
   },
   {
     id: 'planner',
@@ -50,7 +52,7 @@ const AGENTS: AgentItem[] = [
     icon: Compass,
     description: 'Constructing technical architecture and production milestones',
     activeDescription: 'Building system topology diagram and 28-day timeline...',
-    completedDescription: 'Structured 28-day production roadmap & system architecture'
+    completedDescription: 'Structured production roadmap & system architecture',
   },
   {
     id: 'curator',
@@ -58,7 +60,7 @@ const AGENTS: AgentItem[] = [
     icon: Database,
     description: 'Verifying datasets, open-source repos, and API integrations',
     activeDescription: 'Validating dataset schema integrity and API availability...',
-    completedDescription: 'Indexed 2 benchmark datasets & 2 public APIs'
+    completedDescription: 'Indexed benchmark datasets & public APIs',
   },
   {
     id: 'critic',
@@ -66,7 +68,7 @@ const AGENTS: AgentItem[] = [
     icon: ShieldAlert,
     description: 'Evaluating risk parameters & enforcing feasibility validation',
     activeDescription: 'Performing adversarial critique & revision check...',
-    completedDescription: 'Validation passed — 0 critical issues found'
+    completedDescription: 'Validation passed — 0 critical issues found',
   },
   {
     id: 'publisher',
@@ -74,44 +76,129 @@ const AGENTS: AgentItem[] = [
     icon: FileCheck,
     description: 'Formatting verified project plan document & exports',
     activeDescription: 'Compiling structured report, docx schema, and slides...',
-    completedDescription: 'Project plan document generated and ready for export'
-  }
+    completedDescription: 'Project plan document generated and ready for export',
+  },
 ];
 
 interface AgentProgressScreenProps {
   ideaText: string;
-  onComplete: () => void;
+  phase: 'discover' | 'plan';
+  draftId?: string;
+  selectedRank?: number;
+  onPhase1Complete: (data: Phase1Result) => void;
+  onPhase2Complete: (resultsData: any) => void;
+  onError: (errorMsg: string) => void;
 }
 
-export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({ ideaText, onComplete }) => {
-  // Current active agent index (0 to 7)
-  const [activeIndex, setActiveIndex] = useState(0);
+export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({
+  ideaText,
+  phase,
+  draftId,
+  selectedRank,
+  onPhase1Complete,
+  onPhase2Complete,
+  onError,
+}) => {
+  const [activeIndex, setActiveIndex] = useState(phase === 'plan' ? 4 : 0);
+  const [statusMessage, setStatusMessage] = useState('Initializing agent pipeline...');
   const [isRevising, setIsRevising] = useState(false);
+  const hasStartedRef = useRef(false);
 
   useEffect(() => {
-    if (activeIndex >= AGENTS.length) return;
+    if (hasStartedRef.current) return;
+    hasStartedRef.current = true;
 
-    // Simulate Critic revision pass at agent index 6
-    if (activeIndex === 6 && !isRevising) {
-      const revisionTimer = setTimeout(() => {
-        setIsRevising(true);
-        // After 1.5s revision pass, continue to publisher
-        setTimeout(() => {
-          setIsRevising(false);
-          setActiveIndex(7);
-        }, 1500);
-      }, 1000);
-      return () => clearTimeout(revisionTimer);
+    if (phase === 'discover') {
+      setActiveIndex(0);
+      setStatusMessage('Starting discovery, search, and angle evaluation...');
+
+      readSSEResponse(
+        '/api/discover',
+        { idea: ideaText, ideaRaw: ideaText, studentId: 'demo-student' },
+        (event, data) => {
+          if (event === 'progress') {
+            setStatusMessage(data.message || 'Processing...');
+          } else if (event === 'done') {
+            setActiveIndex(4); // Nodes 0..3 done
+            const angleCount = data?.angles?.length ?? 0;
+            setStatusMessage(
+              angleCount > 0
+                ? `Found ${angleCount} innovation angle${angleCount !== 1 ? 's' : ''} — preparing selection view…`
+                : 'Discovery phase complete. Preparing results…'
+            );
+
+            setTimeout(() => {
+              onPhase1Complete(data);
+            }, 900);
+          } else if (event === 'error') {
+            onError(data.error || 'An error occurred during discovery phase.');
+          }
+        }
+      ).catch((err) => {
+        console.error('Discover stream error:', err);
+        onError(err.message || 'Failed to connect to orchestrator pipeline.');
+      });
+    } else if (phase === 'plan') {
+      setActiveIndex(4);
+      setStatusMessage(`Planning project for selected angle (#${selectedRank || 1})...`);
+
+      readSSEResponse(
+        '/api/plan',
+        { draftId, selection: selectedRank || 1, studentId: 'demo-student' },
+        (event, data) => {
+          if (event === 'progress') {
+            setStatusMessage(data.message || 'Planning...');
+          } else if (event === 'done') {
+            setActiveIndex(8); // All 8 nodes done
+            setStatusMessage('Project planning complete!');
+
+            setTimeout(() => {
+              onPhase2Complete(data);
+            }, 600);
+          } else if (event === 'error') {
+            onError(data.error || 'An error occurred during planning phase.');
+          }
+        }
+      ).catch((err) => {
+        console.error('Plan stream error:', err);
+        onError(err.message || 'Failed to connect to planning pipeline.');
+      });
     }
+  }, [phase, ideaText, draftId, selectedRank, onPhase1Complete, onPhase2Complete, onError]);
 
-    const timer = setTimeout(() => {
-      setActiveIndex((prev) => prev + 1);
-    }, 1800);
+  // Fallback step timer to animate node transitions smoothly
+  useEffect(() => {
+    if (phase === 'discover') {
+      if (activeIndex < 3) {
+        const timer = setTimeout(() => {
+          setActiveIndex((prev) => Math.min(3, prev + 1));
+        }, 2200);
+        return () => clearTimeout(timer);
+      }
+    } else if (phase === 'plan') {
+      if (activeIndex >= 4 && activeIndex < 7) {
+        if (activeIndex === 6 && !isRevising) {
+          setIsRevising(true);
+          const revTimer = setTimeout(() => {
+            setIsRevising(false);
+            setActiveIndex(7);
+          }, 1500);
+          return () => clearTimeout(revTimer);
+        }
 
-    return () => clearTimeout(timer);
-  }, [activeIndex, isRevising]);
+        const timer = setTimeout(() => {
+          setActiveIndex((prev) => Math.min(7, prev + 1));
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [phase, activeIndex, isRevising]);
 
-  const progressPercentage = Math.min(100, Math.round(((activeIndex + (activeIndex === AGENTS.length ? 0 : 0.5)) / AGENTS.length) * 100));
+  const maxNodesForPhase = phase === 'discover' ? 4 : 8;
+  const progressPercentage = Math.min(
+    100,
+    Math.round(((activeIndex + (activeIndex === maxNodesForPhase ? 0 : 0.5)) / maxNodesForPhase) * 100)
+  );
 
   return (
     <div className="flex-1 min-h-screen bg-[#FFFFFF] flex flex-col justify-center items-center px-8 py-12">
@@ -120,7 +207,7 @@ export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({ ideaTe
         {/* Submitted Idea Header */}
         <div className="text-center space-y-2">
           <div className="text-[12px] font-semibold uppercase tracking-wider text-[#6B7280]">
-            Multi-Agent Synthesis Pipeline
+            Multi-Agent Synthesis Pipeline — {phase === 'discover' ? 'Phase 1: Research & Discovery' : 'Phase 2: Project Planning'}
           </div>
           <p className="text-[15px] font-medium text-[#1F2340] italic bg-[#F4F5FA] border border-[#E3E5F0] rounded-xl px-4 py-3 text-left">
             "{ideaText || 'Build an AI solution to reduce food waste in college hostels'}"
@@ -132,16 +219,12 @@ export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({ ideaTe
           <div className="flex items-center justify-between text-[13px]">
             <span className="font-semibold text-[#15193D] flex items-center gap-2">
               <Loader2 className="w-4 h-4 text-[#F5A623] animate-spin" />
-              {activeIndex < AGENTS.length 
-                ? `Running ${AGENTS[activeIndex].name}...`
-                : 'Pipeline synthesis complete'}
+              {statusMessage}
             </span>
-            <span className="font-semibold text-[#6B7280]">
-              {progressPercentage}%
-            </span>
+            <span className="font-semibold text-[#6B7280]">{progressPercentage}%</span>
           </div>
           <div className="w-full bg-[#E3E5F0] h-1.5 rounded-full overflow-hidden">
-            <div 
+            <div
               className="bg-[#F5A623] h-full transition-all duration-300 ease-out"
               style={{ width: `${progressPercentage}%` }}
             />
@@ -163,7 +246,7 @@ export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({ ideaTe
                 animate={{
                   paddingTop: isDone ? 8 : 12,
                   paddingBottom: isDone ? 8 : 12,
-                  opacity: isPending ? 0.5 : 1
+                  opacity: isPending ? 0.4 : 1,
                 }}
                 transition={{ duration: 0.2 }}
                 className={`flex items-center gap-4 px-4 rounded-xl transition-colors ${
@@ -186,12 +269,12 @@ export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({ ideaTe
                     <motion.div
                       animate={{
                         scale: [1, 1.06, 1],
-                        opacity: [0.9, 1, 0.9]
+                        opacity: [0.9, 1, 0.9],
                       }}
                       transition={{
                         duration: 1.5,
                         repeat: Infinity,
-                        ease: "easeInOut"
+                        ease: 'easeInOut',
                       }}
                       className="w-9 h-9 rounded-full bg-[#FCEBC8] text-[#15193D] flex items-center justify-center shadow-xs border border-[#F5A623]/40"
                     >
@@ -209,9 +292,11 @@ export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({ ideaTe
                 {/* Agent Text Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2.5">
-                    <span className={`text-[14px] font-semibold ${
-                      isActive ? 'text-[#15193D]' : isDone ? 'text-[#1F2340]' : 'text-[#6B7280]'
-                    }`}>
+                    <span
+                      className={`text-[14px] font-semibold ${
+                        isActive ? 'text-[#15193D]' : isDone ? 'text-[#1F2340]' : 'text-[#6B7280]'
+                      }`}
+                    >
                       {agent.name}
                     </span>
 
@@ -223,14 +308,14 @@ export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({ ideaTe
                       </span>
                     )}
 
-                    {isDone && (
-                      <span className="text-[11px] text-[#16A34A] font-medium">Completed</span>
-                    )}
+                    {isDone && <span className="text-[11px] text-[#16A34A] font-medium">Completed</span>}
                   </div>
 
-                  <p className={`text-[12px] truncate mt-0.5 ${
-                    isActive ? 'text-[#15193D] font-medium' : 'text-[#6B7280]'
-                  }`}>
+                  <p
+                    className={`text-[12px] truncate mt-0.5 ${
+                      isActive ? 'text-[#15193D] font-medium' : 'text-[#6B7280]'
+                    }`}
+                  >
                     {isActive
                       ? agent.activeDescription
                       : isDone
@@ -241,21 +326,6 @@ export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({ ideaTe
               </motion.div>
             );
           })}
-        </div>
-
-        {/* View Results Trigger Button */}
-        <div className="flex justify-end pt-2">
-          <button
-            onClick={onComplete}
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-[14px] font-semibold transition-all duration-150 ${
-              activeIndex >= AGENTS.length
-                ? 'bg-[#F5A623] text-[#15193D] hover:brightness-105 shadow-sm active:scale-[0.98]'
-                : 'bg-[#15193D] text-white hover:bg-[#15193D]/90'
-            }`}
-          >
-            <span>{activeIndex >= AGENTS.length ? 'View results dashboard' : 'Skip to results dashboard'}</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
         </div>
 
       </div>

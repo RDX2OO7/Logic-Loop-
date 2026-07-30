@@ -2,9 +2,11 @@ import React from 'react';
 import { Plus, FolderKanban, Settings, Sparkles, FileText, ChevronRight, Layers, Terminal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+export type ScreenState = 'input' | 'progress_discover' | 'angle_selection' | 'progress_plan' | 'progress_plan_all' | 'compare' | 'results';
+
 interface LeftRailProps {
-  currentScreen: 'input' | 'progress' | 'results';
-  onNavigateScreen: (screen: 'input' | 'progress' | 'results') => void;
+  currentScreen: ScreenState;
+  onNavigateScreen: (screen: ScreenState) => void;
   onNewIdea: () => void;
   activeProjectName?: string;
 }
@@ -16,6 +18,12 @@ export const LeftRail: React.FC<LeftRailProps> = ({
   activeProjectName = "Campus Food Waste AI"
 }) => {
   const navigate = useNavigate();
+  const isProgress =
+    currentScreen === 'progress_discover' ||
+    currentScreen === 'progress_plan' ||
+    currentScreen === 'progress_plan_all' ||
+    currentScreen === 'angle_selection';
+
   return (
     <aside className="w-[240px] min-w-[240px] bg-[#15193D] text-white h-screen fixed left-0 top-0 flex flex-col z-30 border-r border-[#1F2340]">
       {/* Top Header & Serif Wordmark */}
@@ -67,9 +75,9 @@ export const LeftRail: React.FC<LeftRailProps> = ({
             <span>Idea generator</span>
           </button>
 
-          {currentScreen === 'progress' && (
+          {isProgress && (
             <button
-              onClick={() => onNavigateScreen('progress')}
+              onClick={() => onNavigateScreen('progress_discover')}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-medium bg-white/15 text-white font-semibold"
             >
               <div className="w-2 h-2 rounded-full bg-[#F5A623] animate-pulse" />

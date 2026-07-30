@@ -38,6 +38,24 @@ export interface ClusterTheme {
 export interface InnovationAngle {
   angle: string;
   why_novel: string;
+  evidence_ids?: string[];
+  impact_score?: 'high' | 'medium' | 'low';
+  impact_rationale?: string;
+  effort_score?: 'high' | 'medium' | 'low';
+  effort_rationale?: string;
+  priority_rank?: number;
+  _originalIndex?: number;
+}
+
+export interface Phase1Result {
+  status: string;
+  draftId: string;
+  angles: InnovationAngle[];
+  evidence_summary: string;
+  gaps: string[];
+  normalized_problem: string;
+  question?: string;
+  log?: string[];
 }
 
 export interface Milestone {

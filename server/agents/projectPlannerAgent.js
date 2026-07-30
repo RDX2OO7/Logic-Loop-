@@ -45,9 +45,17 @@ export async function runProjectPlannerAgent(chosenAngle, gaps = [], priorIssues
   };
 }
 
-export function pickStrongestAngle(innovationAngles) {
-  if (!innovationAngles || innovationAngles.length === 0) return null;
-  return [...innovationAngles].sort(
-    (a, b) => (b.evidence_ids?.length || 0) - (a.evidence_ids?.length || 0)
-  )[0];
+const IMPACT_WEIGHT = { high: 3, medium: 2, low: 1 };
+const EFFORT_WEIGHT = { low: 3, medium: 2, high: 1 };
+
+export function rankAnglesByImpact(innovationAngles) {
+  if (!innovationAngles || innovationAngles.length === 0) return [];
+  return [...innovationAngles]
+    .map((angle, i) => ({ ...angle, _originalIndex: i }))
+    .sort((a, b) => {
+      const impactDiff = (IMPACT_WEIGHT[b.impact_score] || 0) - (IMPACT_WEIGHT[a.impact_score] || 0);
+      if (impactDiff !== 0) return impactDiff;
+      return (EFFORT_WEIGHT[b.effort_score] || 0) - (EFFORT_WEIGHT[a.effort_score] || 0);
+    })
+    .map((angle, rank) => ({ ...angle, priority_rank: rank + 1 }));
 }

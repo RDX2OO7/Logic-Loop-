@@ -10,13 +10,22 @@ STRICT RULES:
 - Every gap you name and every innovation angle you propose must be grounded in the ACTUAL provided sources — cite the specific source ids that support it in evidence_ids. Do not cite an id that isn't in the input.
 - If the provided sources are too thin, too narrow, or too one-sided (e.g. only repos and no papers, or fewer than 3 sources total) to responsibly identify a real gap, set insufficient_evidence to true and explain why in evidence_summary — do NOT invent gaps to fill space just because you were asked for some.
 - A genuine gap must reflect something the provided sources collectively fail to address — not a generic industry buzzword unconnected to what was actually retrieved.
+- For each innovation angle, also assign impact_score and effort_score. Both must be justified by what's actually in the sources — impact_score reflects how significant the gap is based on how many/how strong the supporting sources are and how clearly they show the gap is unaddressed, NOT how exciting the idea sounds. effort_score reflects realistic build complexity for a small student team, based on what the sources imply about the technical approach.
 
 Respond with ONLY valid JSON, no markdown fences, matching this exact shape:
 {
   "insufficient_evidence": boolean,
   "evidence_summary": "string — 1-2 sentences on what the source set actually covers",
   "gaps": ["string", ...],
-  "innovation_angles": [{"angle": "string", "why_novel": "string", "evidence_ids": ["id1", "id2"]}]
+  "innovation_angles": [{
+    "angle": "string",
+    "why_novel": "string",
+    "evidence_ids": ["id1", "id2"],
+    "impact_score": "high" | "medium" | "low",
+    "impact_rationale": "string — one sentence, must reference the actual evidence",
+    "effort_score": "high" | "medium" | "low",
+    "effort_rationale": "string — one sentence"
+  }]
 }`;
 
 function buildSourceList(deepSearchResult) {

@@ -1,93 +1,165 @@
 import { useState } from 'react';
-import { LeftRail } from './components/LeftRail';
+import { LeftRail, ScreenState } from './components/LeftRail';
 import { IdeaInputScreen } from './components/IdeaInputScreen';
 import { AgentProgressScreen } from './components/AgentProgressScreen';
+import { AngleSelectionScreen } from './components/AngleSelectionScreen';
+import { MultiAngleProgressScreen } from './components/MultiAngleProgressScreen';
+import { CompareResultsScreen } from './components/CompareResultsScreen';
 import { ResultsDashboard } from './components/ResultsDashboard/ResultsDashboard';
 import { NeedsClarificationCard } from './components/NeedsClarificationCard';
 import { InsufficientEvidenceCard } from './components/InsufficientEvidenceCard';
-import { CopilotData } from './types';
+import { CopilotData, Phase1Result } from './types';
 import { mapOrchestratorToCopilotData } from './utils/mapper';
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<'input' | 'progress' | 'results'>('input');
-  const [submittedIdea, setSubmittedIdea] = useState<string>("");
+  const [currentScreen, setCurrentScreen] = useState<ScreenState>('input');
+  const [submittedIdea, setSubmittedIdea] = useState<string>('');
+  const [phase1Data, setPhase1Data] = useState<Phase1Result | null>(null);
+  const [selectedRank, setSelectedRank] = useState<number | null>(null);
   const [copilotData, setCopilotData] = useState<CopilotData | null>(null);
-  const [isLoadingPipeline, setIsLoadingPipeline] = useState<boolean>(false);
+  // Raw results array for the compare screen (all angles)
+  const [compareResults, setCompareResults] = useState<any[]>([]);
 
-  const handleIdeaSubmit = async (ideaText: string) => {
+  const handleIdeaSubmit = (ideaText: string) => {
     setSubmittedIdea(ideaText);
-    setCurrentScreen('progress');
-    setIsLoadingPipeline(true);
+    setPhase1Data(null);
+    setSelectedRank(null);
+    setCopilotData(null);
+    setCompareResults([]);
+    setCurrentScreen('progress_discover');
+  };
 
-    const startTime = Date.now();
-    try {
-      console.log('[UI] Sending idea to orchestrator agent pipeline:', ideaText);
-      const response = await fetch('/api/pipeline', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          idea: ideaText,
-          ideaRaw: ideaText,
-          studentId: 'demo-student',
-        }),
-      });
-
-      const resData = await response.json();
-      console.log('[UI] Received response from orchestrator:', resData);
-
-      const elapsedTimeSec = (Date.now() - startTime) / 1000;
-      const durationSec = resData.durationMs ? resData.durationMs / 1000 : elapsedTimeSec;
-
-      const realCopilotData = mapOrchestratorToCopilotData(
-        resData.result || {},
-        ideaText,
-        durationSec
-      );
-
+  const handlePhase1Complete = (data: Phase1Result) => {
+    setPhase1Data(data);
+    if (data.status === 'needs_clarification' || data.status === 'insufficient_evidence') {
+      const realCopilotData = mapOrchestratorToCopilotData(data, submittedIdea, 2.0);
       setCopilotData(realCopilotData);
-    } catch (err) {
-      console.error('[UI] Error running orchestrator agent pipeline:', err);
-      const elapsedTimeSec = (Date.now() - startTime) / 1000;
-      const fallbackData = mapOrchestratorToCopilotData({ status: 'error' }, ideaText, elapsedTimeSec);
-      setCopilotData(fallbackData);
-    } finally {
-      setIsLoadingPipeline(false);
+      setCurrentScreen('results');
+    } else {
+      setCurrentScreen('angle_selection');
     }
   };
 
+  const handleSelectAngle = (priorityRank: number) => {
+    setSelectedRank(priorityRank);
+    setCurrentScreen('progress_plan');
+  };
+
+  const handleSelectAllAngles = () => {
+    setCurrentScreen('progress_plan_all');
+  };
+
+  // Single-angle planning done → map and show single Results
+  const handleSinglePhase2Complete = (resultsData: any) => {
+    const singleResult = resultsData.results ? resultsData.results[0] : resultsData;
+    const realCopilotData = mapOrchestratorToCopilotData(singleResult, submittedIdea, 5.0);
+    setCopilotData(realCopilotData);
+    setCurrentScreen('results');
+  };
+
+  // Multi-angle "all" planning done → route to Compare screen
+  const handleAllAnglesComplete = (resultsData: any) => {
+    const rawResults: any[] = Array.isArray(resultsData.results)
+      ? resultsData.results
+      : [resultsData];
+    setCompareResults(rawResults);
+    setCurrentScreen('compare');
+  };
+
+  // User picked one result from the Compare screen → show it as Results
+  const handlePickFromCompare = (result: any) => {
+    const realCopilotData = mapOrchestratorToCopilotData(result, submittedIdea, 5.0);
+    setCopilotData(realCopilotData);
+    setCurrentScreen('results');
+  };
+
+  const handleError = (errorMsg: string) => {
+    console.error('[UI Pipeline Error]:', errorMsg);
+    const fallbackData = mapOrchestratorToCopilotData({ status: 'error' }, submittedIdea, 0);
+    setCopilotData(fallbackData);
+    setCurrentScreen('results');
+  };
+
   const handleNewIdea = () => {
-    setSubmittedIdea("");
+    setSubmittedIdea('');
+    setPhase1Data(null);
+    setSelectedRank(null);
     setCopilotData(null);
+    setCompareResults([]);
     setCurrentScreen('input');
   };
 
   return (
     <div className="min-h-screen bg-white text-[#1F2340] flex">
-      {/* Left Rail Navigation (Fixed 240px width) */}
       <LeftRail
         currentScreen={currentScreen}
         onNavigateScreen={setCurrentScreen}
         onNewIdea={handleNewIdea}
-        activeProjectName={submittedIdea ? (submittedIdea.length > 22 ? submittedIdea.slice(0, 22) + "..." : submittedIdea) : "New Research Plan"}
+        activeProjectName={
+          submittedIdea
+            ? submittedIdea.length > 22
+              ? submittedIdea.slice(0, 22) + '...'
+              : submittedIdea
+            : 'New Research Plan'
+        }
       />
 
-      {/* Main Content Area (Offset by 240px left rail width) */}
       <main className="flex-1 ml-[240px] min-h-screen flex flex-col">
-        {currentScreen === 'input' && (
-          <IdeaInputScreen onSubmitIdea={handleIdeaSubmit} />
-        )}
+        {currentScreen === 'input' && <IdeaInputScreen onSubmitIdea={handleIdeaSubmit} />}
 
-        {currentScreen === 'progress' && (
+        {currentScreen === 'progress_discover' && (
           <AgentProgressScreen
             ideaText={submittedIdea}
-            onComplete={() => setCurrentScreen('results')}
+            phase="discover"
+            onPhase1Complete={handlePhase1Complete}
+            onPhase2Complete={() => {}}
+            onError={handleError}
           />
         )}
 
-        {currentScreen === 'results' && (
-          copilotData ? (
+        {currentScreen === 'angle_selection' && phase1Data && (
+          <AngleSelectionScreen
+            ideaText={submittedIdea}
+            normalizedProblem={phase1Data.normalized_problem}
+            angles={phase1Data.angles || []}
+            evidenceSummary={phase1Data.evidence_summary}
+            gaps={phase1Data.gaps}
+            onSelectAngle={handleSelectAngle}
+            onSelectAll={handleSelectAllAngles}
+          />
+        )}
+
+        {currentScreen === 'progress_plan' && phase1Data && selectedRank !== null && (
+          <AgentProgressScreen
+            ideaText={submittedIdea}
+            phase="plan"
+            draftId={phase1Data.draftId}
+            selectedRank={selectedRank}
+            onPhase1Complete={() => {}}
+            onPhase2Complete={handleSinglePhase2Complete}
+            onError={handleError}
+          />
+        )}
+
+        {currentScreen === 'progress_plan_all' && phase1Data && (
+          <MultiAngleProgressScreen
+            ideaText={submittedIdea}
+            draftId={phase1Data.draftId}
+            angles={phase1Data.angles || []}
+            onComplete={handleAllAnglesComplete}
+            onError={handleError}
+          />
+        )}
+
+        {currentScreen === 'compare' && compareResults.length > 0 && (
+          <CompareResultsScreen
+            ideaText={submittedIdea}
+            results={compareResults}
+          />
+        )}
+
+        {currentScreen === 'results' &&
+          (copilotData ? (
             copilotData.pipelineStatus === 'needs_clarification' ? (
               <NeedsClarificationCard
                 originalIdea={submittedIdea}
@@ -97,7 +169,7 @@ export default function App() {
             ) : copilotData.pipelineStatus === 'insufficient_evidence' ? (
               <InsufficientEvidenceCard
                 originalIdea={submittedIdea}
-                evidenceSummary={copilotData.evidence_summary || 'Insufficient research evidence found for this query.'}
+                evidenceSummary={copilotData.evidence_summary || 'Insufficient research evidence found.'}
                 onTryAnotherIdea={handleNewIdea}
               />
             ) : (
@@ -113,8 +185,7 @@ export default function App() {
                 Create New Research Plan
               </button>
             </div>
-          )
-        )}
+          ))}
       </main>
     </div>
   );
