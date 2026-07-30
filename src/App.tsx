@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LeftRail, ScreenState } from './components/LeftRail';
 import { IdeaInputScreen } from './components/IdeaInputScreen';
 import { AgentProgressScreen } from './components/AgentProgressScreen';
@@ -11,6 +11,13 @@ import { InsufficientEvidenceCard } from './components/InsufficientEvidenceCard'
 import { CopilotData, Phase1Result } from './types';
 import { mapOrchestratorToCopilotData } from './utils/mapper';
 
+export interface HistoryEntry {
+  id: string;
+  title: string;
+  idea: string;
+  createdAt: Date;
+}
+
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenState>('input');
   const [submittedIdea, setSubmittedIdea] = useState<string>('');
@@ -19,6 +26,8 @@ export default function App() {
   const [copilotData, setCopilotData] = useState<CopilotData | null>(null);
   // Raw results array for the compare screen (all angles)
   const [compareResults, setCompareResults] = useState<any[]>([]);
+  // Persistent in-session history of completed plans
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   const handleIdeaSubmit = (ideaText: string) => {
     setSubmittedIdea(ideaText);
@@ -49,11 +58,20 @@ export default function App() {
     setCurrentScreen('progress_plan_all');
   };
 
+  // Helper — push a completed plan into history
+  const pushToHistory = (title: string, idea: string) => {
+    setHistory((prev) => [
+      { id: `h-${Date.now()}`, title, idea, createdAt: new Date() },
+      ...prev,
+    ]);
+  };
+
   // Single-angle planning done → map and show single Results
   const handleSinglePhase2Complete = (resultsData: any) => {
     const singleResult = resultsData.results ? resultsData.results[0] : resultsData;
     const realCopilotData = mapOrchestratorToCopilotData(singleResult, submittedIdea, 5.0);
     setCopilotData(realCopilotData);
+    pushToHistory(singleResult?.projectData?.title || submittedIdea, submittedIdea);
     setCurrentScreen('results');
   };
 
@@ -64,6 +82,12 @@ export default function App() {
       : [resultsData];
     setCompareResults(rawResults);
     setCurrentScreen('compare');
+  };
+
+  // When user picks a result from Compare → also add to history
+  const handlePickFromCompareWithHistory = (result: any) => {
+    pushToHistory(result?.projectData?.title || submittedIdea, submittedIdea);
+    handlePickFromCompare(result);
   };
 
   // User picked one result from the Compare screen → show it as Results
@@ -89,12 +113,24 @@ export default function App() {
     setCurrentScreen('input');
   };
 
+  const handleClearHistory = () => {
+    setHistory([]);
+  };
+
+  // Initialise html.dark from localStorage on first load
+  useEffect(() => {
+    const stored = localStorage.getItem('pref_dark') === 'true';
+    document.documentElement.classList.toggle('dark', stored);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-white text-[#1F2340] flex">
+    <div className="min-h-screen bg-white dark:bg-[#0b0e17] text-[#1F2340] dark:text-[#f8fafc] flex transition-colors duration-200">
       <LeftRail
         currentScreen={currentScreen}
         onNavigateScreen={setCurrentScreen}
         onNewIdea={handleNewIdea}
+        onClearHistory={handleClearHistory}
+        history={history}
         activeProjectName={
           submittedIdea
             ? submittedIdea.length > 22

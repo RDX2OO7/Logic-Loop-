@@ -85,55 +85,55 @@ export async function runProjectPlannerAgent(chosenAngle, gaps = [], priorIssues
     tech_stack: Array.isArray(result.tech_stack) ? result.tech_stack : [],
     milestones: Array.isArray(result.milestones)
       ? result.milestones.map((m) => ({
-          name: m.name ?? "",
-          description: m.description ?? "",
-          duration_days: typeof m.duration_days === "number" ? m.duration_days : 0,
-          subtasks: Array.isArray(m.subtasks) ? m.subtasks : [],
-          deliverables: Array.isArray(m.deliverables) ? m.deliverables : [],
-          tech_focus: Array.isArray(m.tech_focus) ? m.tech_focus : [],
-        }))
+        name: m.name ?? "",
+        description: m.description ?? "",
+        duration_days: typeof m.duration_days === "number" ? m.duration_days : 0,
+        subtasks: Array.isArray(m.subtasks) ? m.subtasks : [],
+        deliverables: Array.isArray(m.deliverables) ? m.deliverables : [],
+        tech_focus: Array.isArray(m.tech_focus) ? m.tech_focus : [],
+      }))
       : [],
     apis_needed: Array.isArray(result.apis_needed) ? result.apis_needed : [],
     tech_stack_breakdown:
       result.tech_stack_breakdown && typeof result.tech_stack_breakdown === "object"
         ? {
-            frontend_ui: Array.isArray(result.tech_stack_breakdown.frontend_ui) ? result.tech_stack_breakdown.frontend_ui : [],
-            backend_api: Array.isArray(result.tech_stack_breakdown.backend_api) ? result.tech_stack_breakdown.backend_api : [],
-            database_storage: Array.isArray(result.tech_stack_breakdown.database_storage) ? result.tech_stack_breakdown.database_storage : [],
-            ai_ml_data: Array.isArray(result.tech_stack_breakdown.ai_ml_data) ? result.tech_stack_breakdown.ai_ml_data : [],
-            dev_ops_deployment: Array.isArray(result.tech_stack_breakdown.dev_ops_deployment) ? result.tech_stack_breakdown.dev_ops_deployment : [],
-          }
+          frontend_ui: Array.isArray(result.tech_stack_breakdown.frontend_ui) ? result.tech_stack_breakdown.frontend_ui : [],
+          backend_api: Array.isArray(result.tech_stack_breakdown.backend_api) ? result.tech_stack_breakdown.backend_api : [],
+          database_storage: Array.isArray(result.tech_stack_breakdown.database_storage) ? result.tech_stack_breakdown.database_storage : [],
+          ai_ml_data: Array.isArray(result.tech_stack_breakdown.ai_ml_data) ? result.tech_stack_breakdown.ai_ml_data : [],
+          dev_ops_deployment: Array.isArray(result.tech_stack_breakdown.dev_ops_deployment) ? result.tech_stack_breakdown.dev_ops_deployment : [],
+        }
         : { frontend_ui: [], backend_api: [], database_storage: [], ai_ml_data: [], dev_ops_deployment: [] },
     ui_implementation_plan:
       result.ui_implementation_plan && typeof result.ui_implementation_plan === "object"
         ? {
-            design_system: result.ui_implementation_plan.design_system ?? "",
-            core_views: Array.isArray(result.ui_implementation_plan.core_views)
-              ? result.ui_implementation_plan.core_views.map((v) => ({
-                  page_name: v.page_name ?? "",
-                  purpose: v.purpose ?? "",
-                  key_components: Array.isArray(v.key_components) ? v.key_components : [],
-                }))
-              : [],
-            state_management: result.ui_implementation_plan.state_management ?? "",
-          }
+          design_system: result.ui_implementation_plan.design_system ?? "",
+          core_views: Array.isArray(result.ui_implementation_plan.core_views)
+            ? result.ui_implementation_plan.core_views.map((v) => ({
+              page_name: v.page_name ?? "",
+              purpose: v.purpose ?? "",
+              key_components: Array.isArray(v.key_components) ? v.key_components : [],
+            }))
+            : [],
+          state_management: result.ui_implementation_plan.state_management ?? "",
+        }
         : { design_system: "", core_views: [], state_management: "" },
     data_flow_and_endpoints: Array.isArray(result.data_flow_and_endpoints)
       ? result.data_flow_and_endpoints.map((ep) => ({
-          endpoint: ep.endpoint ?? "",
-          method: ep.method ?? "GET",
-          purpose: ep.purpose ?? "",
-          payload_summary: ep.payload_summary ?? "",
-        }))
+        endpoint: ep.endpoint ?? "",
+        method: ep.method ?? "GET",
+        purpose: ep.purpose ?? "",
+        payload_summary: ep.payload_summary ?? "",
+      }))
       : [],
     deployment_strategy:
       result.deployment_strategy && typeof result.deployment_strategy === "object"
         ? {
-            hosting_environments: result.deployment_strategy.hosting_environments ?? "",
-            ci_cd_pipeline: result.deployment_strategy.ci_cd_pipeline ?? "",
-            environment_variables: Array.isArray(result.deployment_strategy.environment_variables) ? result.deployment_strategy.environment_variables : [],
-            monitoring_and_logs: result.deployment_strategy.monitoring_and_logs ?? "",
-          }
+          hosting_environments: result.deployment_strategy.hosting_environments ?? "",
+          ci_cd_pipeline: result.deployment_strategy.ci_cd_pipeline ?? "",
+          environment_variables: Array.isArray(result.deployment_strategy.environment_variables) ? result.deployment_strategy.environment_variables : [],
+          monitoring_and_logs: result.deployment_strategy.monitoring_and_logs ?? "",
+        }
         : { hosting_environments: "", ci_cd_pipeline: "", environment_variables: [], monitoring_and_logs: "" },
   };
 }

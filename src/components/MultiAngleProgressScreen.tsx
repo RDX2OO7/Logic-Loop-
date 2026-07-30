@@ -170,8 +170,69 @@ export const MultiAngleProgressScreen: React.FC<MultiAngleProgressScreenProps> =
                   </h3>
                 </div>
 
-                {/* Mini Node Pipeline — 4 nodes (Planner, Curator, Critic, Publisher) */}
-                <div className="space-y-2">
+                {/* Mini Node Pipeline — horizontal row with curvy SVG connectors */}
+                <div className="relative flex items-start justify-between pt-2 pb-1">
+                  {/* SVG connector layer — sits behind the node circles */}
+                  <svg
+                    className="absolute inset-0 w-full pointer-events-none"
+                    style={{ top: 20, height: 32, overflow: 'visible' }}
+                    preserveAspectRatio="none"
+                  >
+                    {[0, 1, 2].map((segIdx) => {
+                      // segment connects node segIdx → node segIdx+1
+                      const segDone = segIdx + 1 < activeNodeIdx || colDone;
+                      const segActive = segIdx + 1 === activeNodeIdx && !colDone;
+                      // segPending: neither done nor active
+                      // positions: nodes are at 12.5%, 37.5%, 62.5%, 87.5% of width
+                      const x1Pct = 12.5 + segIdx * 25;
+                      const x2Pct = 12.5 + (segIdx + 1) * 25;
+                      // alternate curve direction per segment
+                      const cy = segIdx % 2 === 0 ? -14 : 14;
+                      const d = `M ${x1Pct}% 0 C ${x1Pct + 8}% ${cy}px, ${x2Pct - 8}% ${cy}px, ${x2Pct}% 0`;
+
+                      if (segDone) {
+                        return (
+                          <path
+                            key={segIdx}
+                            d={d}
+                            fill="none"
+                            stroke="#15193D"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                          />
+                        );
+                      }
+                      if (segActive) {
+                        return (
+                          <motion.path
+                            key={segIdx}
+                            d={d}
+                            fill="none"
+                            stroke="#F5A623"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeDasharray="6 4"
+                            animate={{ strokeDashoffset: [0, -20] }}
+                            transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }}
+                          />
+                        );
+                      }
+                      // pending
+                      return (
+                        <path
+                          key={segIdx}
+                          d={d}
+                          fill="none"
+                          stroke="#E3E5F0"
+                          strokeWidth={2}
+                          strokeDasharray="4 4"
+                          strokeLinecap="round"
+                        />
+                      );
+                    })}
+                  </svg>
+
+                  {/* Node circles + labels */}
                   {PHASE2_AGENTS.map((agent, nodeIdx) => {
                     const isNodeDone = nodeIdx < activeNodeIdx;
                     const isNodeActive = nodeIdx === activeNodeIdx && !colDone;
@@ -181,36 +242,41 @@ export const MultiAngleProgressScreen: React.FC<MultiAngleProgressScreenProps> =
                     return (
                       <div
                         key={agent.id}
-                        className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12px] transition-all duration-200 ${
-                          isNodeActive
-                            ? 'bg-white border border-[#E3E5F0] shadow-sm font-semibold text-[#15193D]'
-                            : isNodeDone
-                            ? 'bg-transparent text-[#374151]'
-                            : 'bg-transparent text-[#9CA3AF] opacity-50'
-                        }`}
+                        className="flex flex-col items-center gap-1.5 z-10"
+                        style={{ width: '25%' }}
                       >
-                        <div className="shrink-0">
-                          {isNodeDone && (
-                            <div className="w-5 h-5 rounded-full bg-[#15193D] text-white flex items-center justify-center">
-                              <Check className="w-2.5 h-2.5 stroke-[3]" />
-                            </div>
-                          )}
-                          {isNodeActive && (
-                            <motion.div
-                              animate={{ scale: [1, 1.1, 1], opacity: [0.85, 1, 0.85] }}
-                              transition={{ duration: 1.3, repeat: Infinity, ease: 'easeInOut' }}
-                              className="w-5 h-5 rounded-full bg-[#FCEBC8] flex items-center justify-center border border-[#F5A623]/50"
-                            >
-                              <IconComponent className="w-2.5 h-2.5 text-[#15193D]" />
-                            </motion.div>
-                          )}
-                          {isNodePending && (
-                            <div className="w-5 h-5 rounded-full bg-[#E3E5F0] flex items-center justify-center">
-                              <IconComponent className="w-2.5 h-2.5 opacity-40" />
-                            </div>
-                          )}
-                        </div>
-                        <span className="truncate">{agent.name}</span>
+                        {/* Circle */}
+                        {isNodeDone && (
+                          <div className="w-9 h-9 rounded-full bg-[#15193D] text-white flex items-center justify-center shadow-sm">
+                            <Check className="w-4 h-4 stroke-[2.5]" />
+                          </div>
+                        )}
+                        {isNodeActive && (
+                          <motion.div
+                            animate={{ scale: [1, 1.12, 1], opacity: [0.85, 1, 0.85] }}
+                            transition={{ duration: 1.3, repeat: Infinity, ease: 'easeInOut' }}
+                            className="w-9 h-9 rounded-full bg-[#FCEBC8] flex items-center justify-center border-2 border-[#F5A623] shadow-sm"
+                          >
+                            <IconComponent className="w-4 h-4 text-[#15193D]" />
+                          </motion.div>
+                        )}
+                        {isNodePending && (
+                          <div className="w-9 h-9 rounded-full bg-[#E3E5F0] flex items-center justify-center opacity-50">
+                            <IconComponent className="w-4 h-4 text-[#6B7280]" />
+                          </div>
+                        )}
+                        {/* Label */}
+                        <span
+                          className={`text-[10px] font-medium text-center leading-tight ${
+                            isNodeDone
+                              ? 'text-[#15193D]'
+                              : isNodeActive
+                              ? 'text-[#F5A623] font-semibold'
+                              : 'text-[#9CA3AF]'
+                          }`}
+                        >
+                          {agent.name}
+                        </span>
                       </div>
                     );
                   })}

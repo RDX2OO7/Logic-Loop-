@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-navy: #15193D;
   --color-ink: #1F2340;
@@ -16,6 +18,7 @@
   --font-serif: Cambria, Georgia, 'Times New Roman', serif;
 }
 
+/* ─── Light mode tokens ──────────────────────────────────────────────────── */
 :root {
   --navy: #15193D;
   --ink: #1F2340;
@@ -27,23 +30,233 @@
   --surface: #FFFFFF;
   --success: #16A34A;
   --warning: #DC2626;
+
+  /* Semantic aliases */
+  --bg-page: #FFFFFF;
+  --bg-card: #F4F5FA;
+  --bg-card-2: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --border-color: #E3E5F0;
+  --text-primary: #1F2340;
+  --text-secondary: #374151;
+  --text-muted: #6B7280;
+  --text-faint: #9CA3AF;
+  --badge-navy-bg: #15193D;
+  --badge-navy-text: #FFFFFF;
+  --amber-soft-bg: #FCEBC8;
+  --highlight-row: #F4F5FA;
 }
 
+/* ─── Dark mode token overrides ──────────────────────────────────────────── */
+html.dark {
+  --navy: #818cf8;
+  --ink: #f8fafc;
+  --muted: #cbd5e1;
+  --amber: #F5A623;
+  --amber-tint: #3a2d10;
+  --card-bg: #1c2238;
+  --line: #2a3352;
+  --surface: #0f1220;
+  --success: #34d399;
+  --warning: #f87171;
+
+  --bg-page: #0b0e19;
+  --bg-card: #161b2e;
+  --bg-card-2: #1c2238;
+  --bg-input: #161b2e;
+  --border-color: #2a3352;
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-muted: #cbd5e1;
+  --text-faint: #94a3b8;
+  --badge-navy-bg: #252c4a;
+  --badge-navy-text: #f8fafc;
+  --amber-soft-bg: #3a2d10;
+  --highlight-row: #1c2238;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--surface);
-  color: var(--ink);
+  background-color: var(--bg-page);
+  color: var(--text-primary);
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Custom Focus Ring Requirement */
+/* ─── Dark mode overrides for hardcoded Tailwind colors ──────────────────── */
+
+/* Page & Container Backgrounds */
+html.dark .bg-white,
+html.dark .bg-\[#FFFFFF\] {
+  background-color: var(--bg-page) !important;
+}
+
+html.dark .bg-\[#F4F5FA\] {
+  background-color: var(--bg-card) !important;
+}
+
+html.dark .bg-\[#F9FAFB\] {
+  background-color: #14192b !important;
+}
+
+html.dark .bg-\[#F0FDF4\] {
+  background-color: #0d2618 !important;
+}
+
+html.dark .bg-\[#15193D\]\/5 {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+html.dark .bg-\[#15193D\]\/10 {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Dark mode overrides for dark text classes to ensure maximum readability */
+html.dark .text-\[#15193D\],
+html.dark .text-\[#1F2340\],
+html.dark .text-\[#0F1220\],
+html.dark .text-\[#0E112A\],
+html.dark .text-\[#111827\],
+html.dark .text-\[#1E293B\],
+html.dark .text-\[#0F172A\],
+html.dark .text-[#111928],
+html.dark .text-[#1E2040],
+html.dark .text-black,
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-gray-700,
+html.dark .text-zinc-900,
+html.dark .text-zinc-800,
+html.dark .text-zinc-700,
+html.dark .text-neutral-900,
+html.dark .text-neutral-800,
+html.dark .text-neutral-700 {
+  color: #f8fafc !important;
+}
+
+/* Secondary & Body Text */
+html.dark .text-\[#374151\],
+html.dark .text-\[#4B5563\],
+html.dark .text-slate-600,
+html.dark .text-gray-600,
+html.dark .text-zinc-600,
+html.dark .text-neutral-600 {
+  color: #e2e8f0 !important;
+}
+
+/* Muted Subtitles & Labels */
+html.dark .text-\[#6B7280\],
+html.dark .text-slate-500,
+html.dark .text-gray-500,
+html.dark .text-zinc-500,
+html.dark .text-neutral-500 {
+  color: #cbd5e1 !important;
+}
+
+/* Faint Text */
+html.dark .text-\[#9CA3AF\],
+html.dark .text-slate-400,
+html.dark .text-gray-400 {
+  color: #94a3b8 !important;
+}
+
+/* Hover state text overrides */
+html.dark .hover\:text-\[#15193D\]:hover {
+  color: #ffffff !important;
+}
+
+/* Borders in dark mode */
+html.dark .border-\[#E3E5F0\] {
+  border-color: var(--border-color) !important;
+}
+
+html.dark .border-\[#15193D\]\/10 {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+html.dark .border-\[#15193D\]\/20 {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+html.dark .border-\[#86EFAC\]\/60 {
+  border-color: #166534 !important;
+}
+
+/* Badges & Pills */
+html.dark .bg-\[#15193D\] {
+  background-color: var(--badge-navy-bg) !important;
+}
+
+/* Amber tint surfaces */
+html.dark .bg-\[#FCEBC8\] {
+  background-color: var(--amber-tint) !important;
+}
+
+html.dark .bg-\[#FEF3C7\] {
+  background-color: var(--amber-tint) !important;
+}
+
+/* Inputs & textareas */
+html.dark input,
+html.dark textarea {
+  background-color: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: var(--text-faint) !important;
+}
+
+/* Table rows & zebra stripes */
+html.dark .hover\:bg-\[#F4F5FA\]:hover,
+html.dark .hover\:bg-white\/60:hover {
+  background-color: #242c48 !important;
+}
+
+/* Cards inside main containers */
+html.dark .bg-white.rounded-xl,
+html.dark .bg-white.rounded-2xl,
+html.dark .bg-white.rounded-lg,
+html.dark .bg-white.rounded-3xl {
+  background-color: var(--bg-card-2) !important;
+}
+
+/* Success green surfaces */
+html.dark .text-\[#16A34A\] {
+  color: #34d399 !important;
+}
+
+html.dark .text-\[#15803D\] {
+  color: #4ade80 !important;
+}
+
+html.dark .bg-\[#DCFCE7\] {
+  background-color: #052e16 !important;
+}
+
+/* Focus ring */
 *:focus-visible {
   outline: 2px solid var(--amber);
   outline-offset: 2px;
+}
+
+/* Smooth theme transitions */
+html.dark *,
+html.dark *::before,
+html.dark *::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
 }

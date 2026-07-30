@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   Clock,
   Cpu,
-  Layers,
   Layout,
   Server,
   Database,
@@ -152,7 +151,7 @@ export const TabRoadmap: React.FC<TabRoadmapProps> = ({ plan }) => {
         </div>
       </div>
 
-      {/* Top Architecture Overview Banner (Always Visible) */}
+      {/* Top Architecture Overview Banner */}
       <div className="bg-[#15193D] text-white border border-white/10 rounded-xl p-6 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -202,7 +201,7 @@ export const TabRoadmap: React.FC<TabRoadmapProps> = ({ plan }) => {
             <div className="relative pt-4 pb-2 px-4">
               <div className="absolute top-1/2 left-8 right-8 h-1 bg-[#E3E5F0] -translate-y-1/2 z-0" />
 
-              <div className={`relative z-10 grid gap-4 grid-cols-${Math.min(plan.milestones.length, 6)}`} style={{ gridTemplateColumns: `repeat(${plan.milestones.length}, minmax(0, 1fr))` }}>
+              <div className="relative z-10 grid gap-4" style={{ gridTemplateColumns: `repeat(${plan.milestones.length}, minmax(0, 1fr))` }}>
                 {plan.milestones.map((milestone, idx) => {
                   const isSelected = selectedMilestoneIndex === idx;
                   return (
@@ -623,4 +622,3 @@ export const TabRoadmap: React.FC<TabRoadmapProps> = ({ plan }) => {
     </div>
   );
 };
-
