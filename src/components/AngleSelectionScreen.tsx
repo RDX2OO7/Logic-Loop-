@@ -28,27 +28,28 @@ interface AngleSelectionScreenProps {
 }
 
 const IMPACT_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: string }> = {
-  high: { label: 'High Impact', color: '#15803D', bg: '#DCFCE7', border: '#BBF7D0', icon: '🚀' },
-  medium: { label: 'Medium Impact', color: '#92400E', bg: '#FEF3C7', border: '#FDE68A', icon: '⚡' },
-  low: { label: 'Lower Impact', color: '#374151', bg: '#F3F4F6', border: '#E5E7EB', icon: '📍' },
+  high: { label: 'High Impact', color: '#15803D', bg: 'rgba(220,252,231,0.7)', border: '#BBF7D0', icon: '🚀' },
+  medium: { label: 'Medium Impact', color: '#92400E', bg: 'rgba(254,243,199,0.7)', border: '#FDE68A', icon: '⚡' },
+  low: { label: 'Lower Impact', color: '#374151', bg: 'rgba(243,244,246,0.7)', border: '#E5E7EB', icon: '📍' },
 };
 
 const EFFORT_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  low: { label: 'Quick Build', color: '#15803D', bg: '#DCFCE7', border: '#BBF7D0' },
-  medium: { label: 'Moderate Effort', color: '#92400E', bg: '#FEF3C7', border: '#FDE68A' },
-  high: { label: 'Heavy Lift', color: '#374151', bg: '#F3F4F6', border: '#E5E7EB' },
+  low: { label: 'Quick Build', color: '#15803D', bg: 'rgba(220,252,231,0.7)', border: '#BBF7D0' },
+  medium: { label: 'Moderate Effort', color: '#92400E', bg: 'rgba(254,243,199,0.7)', border: '#FDE68A' },
+  high: { label: 'Heavy Lift', color: '#374151', bg: 'rgba(243,244,246,0.7)', border: '#E5E7EB' },
 };
 
+// Reference-site accent palette: warm coral / violet / sky-blue
 const RANK_GLOW: Record<number, string> = {
-  1: 'rgba(245,166,35,0.18)',
-  2: 'rgba(99,102,241,0.12)',
-  3: 'rgba(16,185,129,0.10)',
+  1: 'rgba(255,94,58,0.18)',
+  2: 'rgba(192,132,252,0.16)',
+  3: 'rgba(56,189,248,0.14)',
 };
 
 const RANK_ACCENT: Record<number, string> = {
-  1: '#F5A623',
-  2: '#6366F1',
-  3: '#10B981',
+  1: '#FF5E3A',
+  2: '#C084FC',
+  3: '#38BDF8',
 };
 
 export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
@@ -81,23 +82,37 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
   const selectedAngle = angles.find((a) => (a.priority_rank ?? 0) === selectedRank);
 
   return (
-    <div className="flex-1 min-h-screen bg-[#FAFAFA] flex flex-col relative">
-      {/* ─── Top Header Strip ─────────────────────────────────────── */}
-      <div className="bg-white border-b border-[#E3E5F0] px-8 py-5 flex items-center gap-4 sticky top-0 z-20 backdrop-blur-sm">
-        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-[#FCEBC8] border border-[#F5A623]/30">
-          <Lightbulb className="w-3.5 h-3.5 text-[#F5A623]" />
-          <span className="text-[11px] font-bold tracking-widest uppercase text-[#15193D]">
-            Gap &amp; Innovation Analysis
+    <div
+      className="flex-1 min-h-screen bg-white flex flex-col relative overflow-hidden"
+      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+    >
+      {/* Soft decorative gradient backdrop, like the reference hero */}
+      <div
+        className="absolute inset-0 -z-10 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(circle at 15% 0%, rgba(56,189,248,0.10) 0%, transparent 45%), radial-gradient(circle at 85% 10%, rgba(192,132,252,0.10) 0%, transparent 45%), radial-gradient(circle at 50% 100%, rgba(255,94,58,0.06) 0%, transparent 50%)',
+        }}
+      />
+
+      {/* ─── Top Header Strip (glass pill bar) ─────────────────────────────────────── */}
+      <div className="px-6 md:px-8 pt-6 pb-4 sticky top-0 z-20">
+        <div className="max-w-[1400px] mx-auto flex flex-wrap items-center gap-3 bg-white/50 backdrop-blur-xl border border-white/70 rounded-full px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/60 border border-white/70">
+            <Lightbulb className="w-3.5 h-3.5 text-[#FF5E3A]" />
+            <span className="text-[11px] font-bold tracking-widest uppercase text-[#15193D]">
+              Gap &amp; Innovation Analysis
+            </span>
+          </div>
+          <span className="text-[13px] text-[#555555]">
+            {angles.length} {angles.length === 1 ? 'angle' : 'angles'} discovered — read each one, then pick yours
           </span>
         </div>
-        <span className="text-[13px] text-[#6B7280]">
-          {angles.length} {angles.length === 1 ? 'angle' : 'angles'} discovered — read each one, then pick yours
-        </span>
       </div>
 
       <div className="flex flex-col xl:flex-row flex-1 gap-0">
         {/* ─── Left: Scrollable Angle Cards ─────────────────────────── */}
-        <div className="flex-1 px-6 md:px-10 py-10 space-y-6 xl:overflow-y-auto xl:max-h-[calc(100vh-73px)]">
+        <div className="flex-1 px-6 md:px-10 py-6 space-y-6 xl:overflow-y-auto xl:max-h-[calc(100vh-96px)]">
 
           {/* Problem Statement */}
           <motion.div
@@ -106,10 +121,10 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
             transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
             className="space-y-2"
           >
-            <h1 className="text-[26px] md:text-[30px] font-extrabold text-[#15193D] leading-tight tracking-tight">
+            <h1 className="text-[28px] md:text-[34px] font-extrabold text-[#15193D] leading-[1.15] tracking-tight">
               Which innovation angle should we build?
             </h1>
-            <p className="text-[14px] text-[#6B7280] italic max-w-2xl">
+            <p className="text-[14px] text-[#555555] italic max-w-2xl">
               "{problemTitle}"
             </p>
           </motion.div>
@@ -120,16 +135,16 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.08, ease: [0.32, 0.72, 0, 1] }}
-              className="flex items-start gap-3 bg-white border border-[#E3E5F0] rounded-2xl p-4 shadow-sm"
+              className="flex items-start gap-3 bg-white/50 backdrop-blur-xl border border-white/70 rounded-2xl p-4 shadow-[0_8px_32px_rgba(0,0,0,0.04)]"
             >
-              <div className="shrink-0 w-8 h-8 rounded-xl bg-[#F4F5FA] flex items-center justify-center mt-0.5">
+              <div className="shrink-0 w-8 h-8 rounded-xl bg-white/60 border border-white/70 flex items-center justify-center mt-0.5">
                 <BookOpen className="w-4 h-4 text-[#15193D]" />
               </div>
               <div>
-                <p className="text-[12px] font-bold uppercase tracking-wider text-[#6B7280] mb-1">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#555555] mb-1">
                   Evidence Context
                 </p>
-                <p className="text-[13px] text-[#4B5563] leading-relaxed">{evidenceSummary}</p>
+                <p className="text-[13px] text-[#333029] leading-relaxed">{evidenceSummary}</p>
               </div>
             </motion.div>
           )}
@@ -145,9 +160,9 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
               {gaps.map((gap, i) => (
                 <span
                   key={i}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-[#EEF2FF] text-[#4338CA] border border-[#C7D2FE]"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-white/50 backdrop-blur-md text-[#5b21b6] border border-[#C084FC]/40"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#6366F1] inline-block" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#C084FC] inline-block" />
                   {gap}
                 </span>
               ))}
@@ -159,14 +174,14 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-[12px] text-[#9CA3AF] flex items-center gap-1.5"
+            className="text-[12px] text-[#89726B] flex items-center gap-1.5"
           >
             <span>👆</span>
             Click a card to select it — expand any angle to read full details before deciding
           </motion.p>
 
           {/* ─── Angle Cards ────────────────────────────────────────── */}
-          <div className="space-y-4 pb-4">
+          <div className="space-y-5 pb-4">
             {angles.map((angleItem, idx) => {
               const rank = angleItem.priority_rank ?? idx + 1;
               const isSelected = selectedRank === rank;
@@ -183,24 +198,24 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.1 + idx * 0.08, ease: [0.32, 0.72, 0, 1] }}
                 >
-                  {/* Outer Shell (Double-Bezel) */}
+                  {/* Outer Shell (glass card) */}
                   <div
                     onClick={() => setSelectedRank(isSelected ? null : rank)}
                     style={{
                       boxShadow: isSelected
                         ? `0 0 0 2.5px ${accentColor}, 0 8px 32px ${glowColor}`
-                        : '0 2px 12px rgba(0,0,0,0.05)',
+                        : '0 8px 32px rgba(0,0,0,0.04)',
                       cursor: 'pointer',
                     }}
-                    className={`relative rounded-2xl transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] overflow-hidden
+                    className={`relative rounded-2xl transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] overflow-hidden backdrop-blur-xl border
                       ${isSelected
-                        ? 'bg-white'
-                        : 'bg-white hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:-translate-y-0.5'
+                        ? 'bg-white/60 border-white/80'
+                        : 'bg-white/40 border-white/60 hover:bg-white/55 hover:-translate-y-0.5'
                       }`}
                   >
                     {/* Rank Accent Bar */}
                     <div
-                      className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
+                      className="absolute left-0 top-0 bottom-0 w-1"
                       style={{ backgroundColor: accentColor }}
                     />
 
@@ -221,10 +236,11 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <span
-                            className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-lg text-[12px] font-extrabold"
+                            className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full text-[12px] font-extrabold"
                             style={{
-                              backgroundColor: isSelected ? accentColor : '#F4F5FA',
+                              backgroundColor: isSelected ? accentColor : 'rgba(255,255,255,0.6)',
                               color: isSelected ? '#fff' : '#15193D',
+                              border: isSelected ? 'none' : '1px solid rgba(255,255,255,0.7)',
                             }}
                           >
                             {rank}
@@ -250,7 +266,7 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
 
                       {/* Why Novel — always visible */}
                       {angleItem.why_novel && (
-                        <p className="text-[13px] text-[#4B5563] leading-relaxed mb-4 pl-10">
+                        <p className="text-[13px] text-[#333029] leading-relaxed mb-4 pl-10">
                           {angleItem.why_novel}
                         </p>
                       )}
@@ -259,7 +275,7 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
                       <div className="flex flex-wrap items-center gap-2 pl-10 mb-3">
                         {/* Impact Badge */}
                         <span
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border backdrop-blur-md"
                           style={{
                             backgroundColor: impactCfg.bg,
                             color: impactCfg.color,
@@ -272,7 +288,7 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
 
                         {/* Effort Badge */}
                         <span
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border backdrop-blur-md"
                           style={{
                             backgroundColor: effortCfg.bg,
                             color: effortCfg.color,
@@ -284,8 +300,8 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
                         </span>
 
                         {rank === 1 && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#FCEBC8] text-[#15193D] border border-[#F5A623]/40 uppercase tracking-wider">
-                            <Sparkles className="w-2.5 h-2.5 text-[#F5A623]" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/50 backdrop-blur-md text-[#15193D] border border-[#FF5E3A]/40 uppercase tracking-wider">
+                            <Sparkles className="w-2.5 h-2.5 text-[#FF5E3A]" />
                             Top Pick
                           </span>
                         )}
@@ -297,7 +313,7 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
                           e.stopPropagation();
                           toggleExpand(rank);
                         }}
-                        className="flex items-center gap-1.5 pl-10 text-[12px] font-semibold text-[#6B7280] hover:text-[#15193D] transition-colors duration-200"
+                        className="flex items-center gap-1.5 pl-10 text-[12px] font-semibold text-[#555555] hover:text-[#15193D] transition-colors duration-200"
                       >
                         {isExpanded ? (
                           <>
@@ -323,17 +339,17 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
                             transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
                             className="overflow-hidden"
                           >
-                            <div className="pl-10 pt-4 mt-3 border-t border-[#F0F1F5] grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="pl-10 pt-4 mt-3 border-t border-white/60 grid grid-cols-1 sm:grid-cols-2 gap-4">
                               {/* Impact Rationale */}
                               {angleItem.impact_rationale && (
-                                <div className="bg-[#F8F9FC] rounded-xl p-3.5 space-y-1.5 border border-[#E3E5F0]">
+                                <div className="bg-white/40 backdrop-blur-md rounded-xl p-3.5 space-y-1.5 border border-white/60">
                                   <div className="flex items-center gap-1.5">
-                                    <BarChart3 className="w-3.5 h-3.5 text-[#6366F1]" />
-                                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">
+                                    <BarChart3 className="w-3.5 h-3.5 text-[#C084FC]" />
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#555555]">
                                       Impact Rationale
                                     </span>
                                   </div>
-                                  <p className="text-[12px] text-[#4B5563] leading-relaxed">
+                                  <p className="text-[12px] text-[#333029] leading-relaxed">
                                     {angleItem.impact_rationale}
                                   </p>
                                 </div>
@@ -341,14 +357,14 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
 
                               {/* Effort Rationale */}
                               {angleItem.effort_rationale && (
-                                <div className="bg-[#F8F9FC] rounded-xl p-3.5 space-y-1.5 border border-[#E3E5F0]">
+                                <div className="bg-white/40 backdrop-blur-md rounded-xl p-3.5 space-y-1.5 border border-white/60">
                                   <div className="flex items-center gap-1.5">
-                                    <Clock className="w-3.5 h-3.5 text-[#F5A623]" />
-                                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">
+                                    <Clock className="w-3.5 h-3.5 text-[#FF5E3A]" />
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#555555]">
                                       Effort Rationale
                                     </span>
                                   </div>
-                                  <p className="text-[12px] text-[#4B5563] leading-relaxed">
+                                  <p className="text-[12px] text-[#333029] leading-relaxed">
                                     {angleItem.effort_rationale}
                                   </p>
                                 </div>
@@ -356,10 +372,10 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
 
                               {/* Evidence IDs */}
                               {angleItem.evidence_ids && angleItem.evidence_ids.length > 0 && (
-                                <div className="sm:col-span-2 bg-[#F8F9FC] rounded-xl p-3.5 space-y-2 border border-[#E3E5F0]">
+                                <div className="sm:col-span-2 bg-white/40 backdrop-blur-md rounded-xl p-3.5 space-y-2 border border-white/60">
                                   <div className="flex items-center gap-1.5">
-                                    <BookOpen className="w-3.5 h-3.5 text-[#10B981]" />
-                                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">
+                                    <BookOpen className="w-3.5 h-3.5 text-[#38BDF8]" />
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#555555]">
                                       Grounded In {angleItem.evidence_ids.length} Source{angleItem.evidence_ids.length !== 1 ? 's' : ''}
                                     </span>
                                   </div>
@@ -367,7 +383,7 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
                                     {angleItem.evidence_ids.map((id) => (
                                       <span
                                         key={id}
-                                        className="inline-block px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]"
+                                        className="inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-white/60 text-[#0e7490] border border-[#38BDF8]/40"
                                       >
                                         {id}
                                       </span>
@@ -396,11 +412,11 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
             >
               <button
                 onClick={onSelectAll}
-                className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-full border border-[#E3E5F0] bg-white text-[#6B7280] text-[13px] font-semibold hover:border-[#15193D]/30 hover:text-[#15193D] hover:bg-[#F4F5FA] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] shadow-sm"
+                className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-full border border-white/70 bg-white/40 backdrop-blur-xl text-[#555555] text-[13px] font-semibold hover:bg-white/60 hover:text-[#15193D] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] shadow-[0_8px_32px_rgba(0,0,0,0.04)]"
               >
                 <Compass className="w-4 h-4 group-hover:rotate-45 transition-transform duration-500" />
                 Not sure? Research all {angles.length} angles and compare outputs
-                <span className="w-6 h-6 rounded-full bg-[#F4F5FA] group-hover:bg-[#E3E5F0] flex items-center justify-center transition-colors duration-300">
+                <span className="w-6 h-6 rounded-full bg-white/50 group-hover:bg-white/70 flex items-center justify-center transition-colors duration-300">
                   <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </button>
@@ -408,13 +424,13 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
           )}
         </div>
 
-        {/* ─── Right: Selection Panel (sticky sidebar) ─────────────── */}
-        <div className="xl:w-[340px] xl:shrink-0 xl:sticky xl:top-[73px] xl:max-h-[calc(100vh-73px)] xl:overflow-y-auto border-t xl:border-t-0 xl:border-l border-[#E3E5F0] bg-white">
-          <div className="p-6 md:p-8 space-y-6">
+        {/* ─── Right: Selection Panel (sticky glass sidebar) ─────────────── */}
+        <div className="xl:w-[360px] xl:shrink-0 xl:sticky xl:top-[96px] xl:max-h-[calc(100vh-96px)] xl:overflow-y-auto">
+          <div className="m-4 xl:mt-0 xl:mr-6 xl:mb-6 bg-white/45 backdrop-blur-2xl border border-white/70 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-6 md:p-7 space-y-6">
 
             {/* Selection Status */}
             <div>
-              <h3 className="text-[12px] font-bold uppercase tracking-widest text-[#6B7280] mb-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#555555] mb-3">
                 Your Selection
               </h3>
 
@@ -426,15 +442,15 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="rounded-2xl border-2 border-dashed border-[#E3E5F0] p-5 text-center space-y-2"
+                    className="rounded-2xl border-2 border-dashed border-white/70 bg-white/30 p-5 text-center space-y-2"
                   >
-                    <div className="w-10 h-10 rounded-full bg-[#F4F5FA] flex items-center justify-center mx-auto">
-                      <Lightbulb className="w-5 h-5 text-[#9CA3AF]" />
+                    <div className="w-10 h-10 rounded-full bg-white/50 border border-white/70 flex items-center justify-center mx-auto">
+                      <Lightbulb className="w-5 h-5 text-[#89726B]" />
                     </div>
-                    <p className="text-[13px] text-[#9CA3AF] font-medium">
+                    <p className="text-[13px] text-[#89726B] font-medium">
                       No angle selected yet
                     </p>
-                    <p className="text-[12px] text-[#C4C9D4]">
+                    <p className="text-[12px] text-[#89726B]/70">
                       Click any card on the left to choose your direction
                     </p>
                   </motion.div>
@@ -449,21 +465,21 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
                   >
                     {/* Selected Angle Preview */}
                     <div
-                      className="rounded-2xl p-4 border"
+                      className="rounded-2xl p-4 border backdrop-blur-md"
                       style={{
-                        borderColor: RANK_ACCENT[selectedRank] || '#E3E5F0',
-                        backgroundColor: `${RANK_GLOW[selectedRank] ? 'rgba(245,246,250,1)' : '#F4F5FA'}`,
+                        borderColor: RANK_ACCENT[selectedRank] || 'rgba(255,255,255,0.7)',
+                        backgroundColor: 'rgba(255,255,255,0.45)',
                         boxShadow: `0 0 0 1px ${RANK_ACCENT[selectedRank] || '#E3E5F0'}20`,
                       }}
                     >
                       <div className="flex items-center gap-2 mb-2">
                         <span
-                          className="inline-flex items-center justify-center w-6 h-6 rounded-md text-[11px] font-extrabold text-white"
+                          className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-extrabold text-white"
                           style={{ backgroundColor: RANK_ACCENT[selectedRank] || '#15193D' }}
                         >
                           {selectedRank}
                         </span>
-                        <span className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider">
+                        <span className="text-[11px] font-bold text-[#555555] uppercase tracking-wider">
                           Angle #{selectedRank} Selected
                         </span>
                         <CheckCircle2
@@ -479,8 +495,8 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
                     {/* Score Summary */}
                     <div className="grid grid-cols-2 gap-2">
                       {selectedAngle?.impact_score && (
-                        <div className="bg-[#F8F9FC] rounded-xl p-3 border border-[#E3E5F0] space-y-1">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF]">Impact</p>
+                        <div className="bg-white/40 backdrop-blur-md rounded-xl p-3 border border-white/60 space-y-1">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-[#89726B]">Impact</p>
                           <p
                             className="text-[13px] font-bold capitalize"
                             style={{ color: IMPACT_CONFIG[selectedAngle.impact_score]?.color || '#15193D' }}
@@ -490,8 +506,8 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
                         </div>
                       )}
                       {selectedAngle?.effort_score && (
-                        <div className="bg-[#F8F9FC] rounded-xl p-3 border border-[#E3E5F0] space-y-1">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF]">Effort</p>
+                        <div className="bg-white/40 backdrop-blur-md rounded-xl p-3 border border-white/60 space-y-1">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-[#89726B]">Effort</p>
                           <p
                             className="text-[13px] font-bold capitalize"
                             style={{ color: EFFORT_CONFIG[selectedAngle.effort_score]?.color || '#15193D' }}
@@ -520,23 +536,25 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
                     <button
                       onClick={handleProceed}
                       disabled={isProceeding}
-                      className="group w-full inline-flex items-center justify-between gap-3 px-5 py-4 rounded-2xl font-bold text-[14px] text-white transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97] shadow-lg"
+                      className="group w-full inline-flex items-center justify-between gap-3 px-5 py-4 rounded-full font-bold text-[14px] text-white transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97] shadow-lg"
                       style={{
-                        backgroundColor: isProceeding ? '#6B7280' : '#15193D',
+                        background: isProceeding
+                          ? '#89726B'
+                          : 'linear-gradient(135deg, #FF5E3A 0%, #C084FC 100%)',
                         boxShadow: isProceeding
                           ? 'none'
-                          : `0 4px 20px rgba(21,25,61,0.3), 0 0 0 0 transparent`,
+                          : '0 4px 24px rgba(255,94,58,0.35)',
                       }}
                     >
                       <span>
                         {isProceeding ? 'Starting…' : `Build Angle #${selectedRank}`}
                       </span>
-                      <span className="w-8 h-8 rounded-xl bg-white/15 group-hover:bg-white/25 flex items-center justify-center transition-colors duration-300">
+                      <span className="w-8 h-8 rounded-full bg-white/20 group-hover:bg-white/30 flex items-center justify-center transition-colors duration-300">
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-300" />
                       </span>
                     </button>
 
-                    <p className="text-[11px] text-[#9CA3AF] text-center mt-2">
+                    <p className="text-[11px] text-[#89726B] text-center mt-2">
                       This will launch the full planning pipeline for your selected angle
                     </p>
                   </motion.div>
@@ -547,7 +565,7 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
               {selectedRank === null && (
                 <button
                   disabled
-                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl font-bold text-[14px] text-[#9CA3AF] bg-[#F4F5FA] border border-[#E3E5F0] cursor-not-allowed"
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-full font-bold text-[14px] text-[#89726B] bg-white/40 border border-white/60 cursor-not-allowed"
                 >
                   <Lightbulb className="w-4 h-4" />
                   Select an angle to proceed
@@ -558,7 +576,7 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
             {/* Quick Overview Table */}
             {angles.length > 1 && (
               <div>
-                <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-3">
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#89726B] mb-3">
                   All Angles At a Glance
                 </h3>
                 <div className="space-y-2">
@@ -569,19 +587,19 @@ export const AngleSelectionScreen: React.FC<AngleSelectionScreenProps> = ({
                       <button
                         key={r}
                         onClick={() => setSelectedRank(isThis ? null : r)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)]"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-left transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] backdrop-blur-md"
                         style={{
-                          backgroundColor: isThis ? `${RANK_GLOW[r] || 'rgba(21,25,61,0.06)'}` : '#F8F9FC',
+                          backgroundColor: isThis ? `${RANK_GLOW[r] || 'rgba(21,25,61,0.06)'}` : 'rgba(255,255,255,0.4)',
                           borderWidth: 1,
                           borderStyle: 'solid',
-                          borderColor: isThis ? RANK_ACCENT[r] || '#15193D' : '#E3E5F0',
+                          borderColor: isThis ? RANK_ACCENT[r] || '#15193D' : 'rgba(255,255,255,0.6)',
                         }}
                       >
                         <span
-                          className="shrink-0 w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-extrabold"
+                          className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-extrabold"
                           style={{
-                            backgroundColor: isThis ? RANK_ACCENT[r] || '#15193D' : '#E3E5F0',
-                            color: isThis ? '#fff' : '#6B7280',
+                            backgroundColor: isThis ? RANK_ACCENT[r] || '#15193D' : 'rgba(255,255,255,0.6)',
+                            color: isThis ? '#fff' : '#555555',
                           }}
                         >
                           {r}
