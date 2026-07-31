@@ -58,11 +58,17 @@ export interface Phase1Result {
   log?: string[];
 }
 
+export interface SubTask {
+  text: string;
+  done: boolean;
+  flatIndex: number;
+}
+
 export interface Milestone {
   name: string;
   description: string;
   duration_days: number;
-  subtasks?: string[];
+  subtasks?: string[] | SubTask[];
   deliverables?: string[];
   tech_focus?: string[];
 }
@@ -156,4 +162,5 @@ export interface CopilotData {
     docxPath?: string;
     pptxPath?: string;
   };
+  projectId?: string;
 }

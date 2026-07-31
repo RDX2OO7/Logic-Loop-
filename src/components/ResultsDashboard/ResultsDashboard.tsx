@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CopilotData } from '../../types';
-import { CheckCircle2, AlertTriangle, FileText, Presentation, Sparkles, BookOpen, Lightbulb, Calendar, Database } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, FileText, Presentation, Sparkles, BookOpen, Lightbulb, Calendar, Database, Copy, Check } from 'lucide-react';
 import { TabOverview } from './TabOverview';
 import { TabResearch } from './TabResearch';
 import { TabGapsInnovation } from './TabGapsInnovation';
@@ -24,6 +24,15 @@ const TABS: { id: TabType; label: string; icon: React.ElementType }[] = [
 
 export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ data }) => {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyProjectId = () => {
+    if (!data.projectId) return;
+    navigator.clipboard.writeText(data.projectId).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   const docxUrl = data.exports?.docxUrl || data.exports?.docxPath;
   const pptxUrl = data.exports?.pptxUrl || data.exports?.pptxPath;
@@ -87,6 +96,27 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ data }) => {
             <span>•</span>
             <span>8/8 Agents passed</span>
           </div>
+
+          {/* Project ID / Telegram link banner */}
+          {data.projectId && (
+            <div className="flex items-center gap-2.5 mt-2 px-3 py-2 rounded-lg bg-[#15193D]/5 border border-[#15193D]/10 w-max">
+              <span className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wide">Project ID</span>
+              <code className="text-[12px] font-mono text-[#15193D] font-semibold select-all">{data.projectId}</code>
+              <span className="text-[11px] text-[#6B7280]">—</span>
+              <span className="text-[11px] text-[#6B7280]">link in Telegram:</span>
+              <code className="text-[11px] font-mono text-[#F5A623] bg-[#15193D] px-1.5 py-0.5 rounded select-all">/link {data.projectId}</code>
+              <button
+                id="copy-project-id-btn"
+                onClick={handleCopyProjectId}
+                className="flex items-center gap-1 px-2 py-1 rounded-md bg-white border border-[#E3E5F0] hover:bg-[#F4F5FA] transition-colors text-[11px] font-medium text-[#15193D] shrink-0"
+                title="Copy project ID"
+              >
+                {copied
+                  ? <><Check className="w-3 h-3 text-[#16A34A]" /><span className="text-[#16A34A]">Copied!</span></>
+                  : <><Copy className="w-3 h-3" /><span>Copy</span></>}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right Side: Export Buttons */}
@@ -167,7 +197,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ data }) => {
                 innovationAngles={data.innovation_angles}
               />
             )}
-            {activeTab === 'roadmap' && <TabRoadmap plan={data.plan} />}
+            {activeTab === 'roadmap' && <TabRoadmap plan={data.plan} projectId={data.projectId} />}
             {activeTab === 'resources' && <TabResources resources={data.resources} />}
           </motion.div>
         </AnimatePresence>

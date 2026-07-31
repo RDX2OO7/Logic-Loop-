@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plan } from '../../types';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plan, SubTask } from '../../types';
 import {
   Calendar,
   CheckCircle2,
@@ -21,11 +21,43 @@ import {
 
 interface TabRoadmapProps {
   plan: Plan;
+  projectId?: string;
 }
 
-export const TabRoadmap: React.FC<TabRoadmapProps> = ({ plan }) => {
+export const TabRoadmap: React.FC<TabRoadmapProps> = ({ plan, projectId }) => {
   const [selectedMilestoneIndex, setSelectedMilestoneIndex] = useState<number>(0);
   const [activeSubTab, setActiveSubTab] = useState<'timeline' | 'stack' | 'ui' | 'endpoints' | 'deployment'>('timeline');
+  // Live task progress from the server — keyed by flatIndex
+  const [liveProgress, setLiveProgress] = useState<SubTask[]>([]);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!projectId) return;
+
+    const fetchProgress = async () => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}/tasks`);
+        if (!res.ok) return;
+        const milestones: { subtasks: SubTask[] }[] = await res.json();
+        const flat: SubTask[] = [];
+        milestones.forEach(m => m.subtasks?.forEach(s => flat.push(s)));
+        setLiveProgress(flat);
+      } catch {
+        // silently ignore network errors during polling
+      }
+    };
+
+    fetchProgress(); // immediate first load
+    intervalRef.current = setInterval(fetchProgress, 4000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [projectId]);
+
+  // Helper: look up live done state by flatIndex; fall back to false
+  const isTaskDone = (flatIndex: number) =>
+    liveProgress.find(s => s.flatIndex === flatIndex)?.done ?? false;
 
   const selectedMilestone = plan.milestones[selectedMilestoneIndex] || plan.milestones[0];
   const totalDays = plan.milestones.reduce((acc, m) => acc + (m.duration_days || 0), 0);
@@ -264,25 +296,52 @@ export const TabRoadmap: React.FC<TabRoadmapProps> = ({ plan }) => {
               </p>
 
               {/* Subtasks Checklist */}
-              {selectedMilestone.subtasks && selectedMilestone.subtasks.length > 0 && (
-                <div className="space-y-3 pt-2">
-                  <h5 className="text-[12px] font-semibold uppercase tracking-wider text-[#6B7280] flex items-center gap-1.5">
-                    <CheckSquare className="w-3.5 h-3.5 text-[#F5A623]" />
-                    Actionable Task Breakdown
-                  </h5>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                    {selectedMilestone.subtasks.map((task, i) => (
-                      <div
-                        key={i}
-                        className="p-3 rounded-lg bg-[#F4F5FA] border border-[#E3E5F0] text-[12.5px] font-medium text-[#1F2340] flex items-start gap-2.5"
-                      >
-                        <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
-                        <span>{task}</span>
-                      </div>
-                    ))}
+              {selectedMilestone.subtasks && selectedMilestone.subtasks.length > 0 && (() => {
+                // Compute the flat-index offset for this milestone
+                const milestoneStartIndex = plan.milestones
+                  .slice(0, selectedMilestoneIndex)
+                  .reduce((acc, m) => acc + (m.subtasks?.length ?? 0), 0);
+                return (
+                  <div className="space-y-3 pt-2">
+                    <h5 className="text-[12px] font-semibold uppercase tracking-wider text-[#6B7280] flex items-center gap-1.5">
+                      <CheckSquare className="w-3.5 h-3.5 text-[#F5A623]" />
+                      Actionable Task Breakdown
+                      {liveProgress.length > 0 && (
+                        <span className="ml-1 px-1.5 py-0.5 rounded-full bg-[#16A34A]/10 text-[#16A34A] text-[10px] font-bold">
+                          Live
+                        </span>
+                      )}
+                    </h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                      {selectedMilestone.subtasks.map((task, i) => {
+                        const flatIdx = milestoneStartIndex + i;
+                        const taskText = typeof task === 'string' ? task : (task as SubTask).text;
+                        const done = liveProgress.length > 0 ? isTaskDone(flatIdx) : false;
+                        return (
+                          <div
+                            key={i}
+                            className={`p-3 rounded-lg border text-[12.5px] font-medium flex items-start gap-2.5 transition-colors duration-300 ${
+                              done
+                                ? 'bg-[#F0FDF4] border-[#16A34A]/20'
+                                : 'bg-[#F4F5FA] border-[#E3E5F0]'
+                            }`}
+                          >
+                            {done ? (
+                              <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
+                            ) : (
+                              <div className="w-4 h-4 rounded-full border-2 border-dashed border-[#D1D5DB] shrink-0 mt-0.5" />
+                            )}
+                            <span className={done ? 'line-through text-[#6B7280]' : 'text-[#1F2340]'}>
+                              {taskText}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
+
 
               {/* Deliverables & Tech Focus */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-[#E3E5F0]">

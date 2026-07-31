@@ -132,5 +132,6 @@ export function mapOrchestratorToCopilotData(
     exports,
     generatedAt: timeString,
     executionTimeSec: Number(executionTimeSec.toFixed(1)),
+    projectId: result?.projectId || undefined,
   };
 }

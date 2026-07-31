@@ -151,6 +151,17 @@ app.get("/api/projects/:id", async (req, res) => {
   }
 });
 
+// GET /api/projects/:id/tasks — lightweight task-progress only (polled by Roadmap tab)
+app.get("/api/projects/:id/tasks", async (req, res) => {
+  try {
+    const { getTaskProgress } = await import("./db/taskProgress.js");
+    const progress = await getTaskProgress(req.params.id);
+    res.json(progress);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/files/:fileId
 app.get("/api/files/:fileId", async (req, res) => {
   try {
@@ -185,8 +196,13 @@ app.post("/api/pipeline", async (req, res) => {
   }
 });
 
+import { startBot } from "./bot/telegramBot.js";
+
 app.listen(PORT, () => {
   console.log(`Orchestrator server listening on http://localhost:${PORT}`);
 });
 
+startBot();
+
 export default app;
+

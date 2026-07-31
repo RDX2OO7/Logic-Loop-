@@ -8,6 +8,7 @@ import { runResourceCuratorAgent } from "./agents/resourceCuratorAgent.js";
 import { runCriticAgent } from "./agents/criticAgent.js";
 import { generateDocxBuffer, generatePptxBuffer } from "./agents/publisherAgent.js";
 import { saveProjectRecord } from "./db/projectStore.js";
+import { buildInitialTaskProgress, saveTaskProgress } from "./db/taskProgress.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -160,6 +161,11 @@ export async function planOneAngle(chosenAngle, phase1Data, studentId, deps = de
   step("database: saving project + files");
   const saved = await deps.projectSaver({ studentId, projectData, critic: criticResult, docxBuffer, pptxBuffer });
   step("database: saved");
+
+  // Seed per-subtask progress now that we have a projectId to attach it to.
+  const initialProgress = buildInitialTaskProgress(plan.milestones);
+  await saveTaskProgress(saved.projectId, initialProgress);
+  step("database: taskProgress seeded");
 
   return {
     status: criticResult.approved ? "approved" : "approved_with_unresolved_issues",

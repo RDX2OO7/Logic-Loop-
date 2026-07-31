@@ -92,3 +92,14 @@ export async function generateJSON(systemInstruction, userPrompt, model = "gemin
     }
   }
 }
+
+export async function generateText(systemInstruction, userPrompt, model = "gemini-3.5-flash-lite") {
+  const response = await getClient().models.generateContent({
+    model,
+    contents: userPrompt,
+    config: {
+      systemInstruction,
+    },
+  });
+  return response.text;
+}
