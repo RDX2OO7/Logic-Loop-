@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Globe, ArrowRight, Sparkles, Lightbulb, Compass, FileCode } from 'lucide-react';
+import { Globe, ArrowRight, Sparkles, Lightbulb, Compass, FileCode, Check } from 'lucide-react';
 
 interface IdeaInputScreenProps {
   onSubmitIdea: (ideaText: string) => void;
@@ -11,10 +11,16 @@ const EXAMPLE_IDEAS = [
   "Create an autonomous drone routing framework for micro-logistics"
 ];
 
+// Same engines the DeepSearch agent actually queries (mirrors the evidence
+// ledger on the progress screen) — stated here quietly, before the run even
+// starts, so the "verified, not hallucinated" promise is set up early.
+const VERIFIED_SOURCES = ["arXiv", "Semantic Scholar", "OpenAlex", "GitHub", "Tavily"];
+
 export const IdeaInputScreen: React.FC<IdeaInputScreenProps> = ({ onSubmitIdea }) => {
   const [ideaText, setIdeaText] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("English");
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,13 +39,15 @@ export const IdeaInputScreen: React.FC<IdeaInputScreenProps> = ({ onSubmitIdea }
 
         {/* Header Block */}
         <div className="space-y-3">
-          {/* Eyebrow Label with Amber-Tint Icon Badge */}
+          {/* Step 1: Eyebrow Label — mono/uppercase/tracked, matches the
+              progress screen's "PHASE 01 · ..." label so both screens read
+              as one product. */}
           <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-[#F4F5FA] border border-[#E3E5F0]">
             <div className="w-5 h-5 rounded-full bg-[#FCEBC8] text-[#15193D] flex items-center justify-center">
               <Sparkles className="w-3 h-3 text-[#15193D]" />
             </div>
-            <span className="text-[12px] font-medium text-[#6B7280]">
-              New research & project plan
+            <span className="font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-[#6B7280]">
+              New research &amp; project plan
             </span>
           </div>
 
@@ -47,10 +55,24 @@ export const IdeaInputScreen: React.FC<IdeaInputScreenProps> = ({ onSubmitIdea }
           <h1 className="text-[28px] font-semibold text-[#15193D] tracking-tight leading-tight">
             What do you want to build?
           </h1>
+
+          {/* Step 2: Trust strip — plants the "real, verifiable sources"
+              promise before the user even submits. Quiet, not a banner. */}
+          <div className="flex items-center gap-1.5 font-mono text-[12px] text-[#6B7280]">
+            <Check className="w-3.5 h-3.5 text-[#1F7A6C]" />
+            <span>verifies against</span>
+            <span className="text-[#1F2340]">
+              {VERIFIED_SOURCES.join(' · ')}
+            </span>
+          </div>
         </div>
 
         {/* Input Card Container */}
-        <form onSubmit={handleSubmit} className="relative bg-[#F4F5FA] border border-[#E3E5F0] rounded-[16px] p-5 shadow-sm hover:border-[#15193D]/20 transition-all duration-150">
+        <form
+          onSubmit={handleSubmit}
+          className={`relative bg-[#F4F5FA] border rounded-[16px] p-5 shadow-sm transition-all duration-150 ${isFocused ? 'border-[#F5A623]/60 shadow-[0_0_0_3px_rgba(245,166,35,0.12)]' : 'border-[#E3E5F0] hover:border-[#15193D]/20'
+            }`}
+        >
 
           {/* Top Control Bar inside Textarea Card (Language Selector) */}
           <div className="flex items-center justify-between mb-3 border-b border-[#E3E5F0]/60 pb-3">
@@ -90,14 +112,20 @@ export const IdeaInputScreen: React.FC<IdeaInputScreenProps> = ({ onSubmitIdea }
             </div>
           </div>
 
-          {/* Textarea */}
-          <textarea
-            value={ideaText}
-            onChange={(e) => setIdeaText(e.target.value)}
-            placeholder="e.g. build an ai tool that can help visually disabled people to use android phone "
-            rows={4}
-            className="w-full bg-transparent text-[#1F2340] placeholder-[#6B7280] text-[15px] leading-relaxed resize-none focus:outline-none"
-          />
+          {/* Textarea — Step 3: mono "&gt;" prompt glyph + amber focus glow
+              (glow is applied on the form wrapper above via isFocused) */}
+          <div className="flex items-start gap-2">
+            <span className="font-mono text-[15px] leading-relaxed text-[#1F7A6C] select-none">&gt;</span>
+            <textarea
+              value={ideaText}
+              onChange={(e) => setIdeaText(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              placeholder="e.g. build an ai tool that can help visually disabled people to use android phone "
+              rows={4}
+              className="w-full bg-transparent text-[#1F2340] placeholder-[#6B7280] text-[15px] leading-relaxed resize-none focus:outline-none"
+            />
+          </div>
 
           {/* Bottom Toolbar & Submit Button */}
           <div className="flex items-center justify-between pt-3 mt-2 border-t border-[#E3E5F0]/60">
@@ -110,8 +138,8 @@ export const IdeaInputScreen: React.FC<IdeaInputScreenProps> = ({ onSubmitIdea }
               type="submit"
               disabled={!ideaText.trim()}
               className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-[14px] font-semibold transition-all duration-150 ${ideaText.trim()
-                  ? 'bg-[#F5A623] text-[#15193D] hover:brightness-105 shadow-sm active:scale-[0.98]'
-                  : 'bg-[#E3E5F0] text-[#6B7280] cursor-not-allowed'
+                ? 'bg-[#F5A623] text-[#15193D] hover:brightness-105 shadow-sm active:scale-[0.98]'
+                : 'bg-[#E3E5F0] text-[#6B7280] cursor-not-allowed'
                 }`}
             >
               <span>Generate project plan</span>
@@ -122,7 +150,9 @@ export const IdeaInputScreen: React.FC<IdeaInputScreenProps> = ({ onSubmitIdea }
 
         {/* Example Idea Chips Section */}
         <div className="space-y-3">
-          <div className="text-[12px] font-medium text-[#6B7280] uppercase tracking-wider">
+          {/* Step 4: relabeled to the same mono/uppercase eyebrow treatment
+              as Step 1, for consistency across the screen. */}
+          <div className="font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-[#6B7280]">
             Or try an example prompt
           </div>
 
@@ -132,7 +162,7 @@ export const IdeaInputScreen: React.FC<IdeaInputScreenProps> = ({ onSubmitIdea }
                 key={idx}
                 type="button"
                 onClick={() => handleChipClick(idea)}
-                className="w-full text-left p-3.5 rounded-xl bg-[#F4F5FA] border border-[#E3E5F0] hover:border-[#15193D]/30 transition-all duration-150 flex items-start gap-3 group"
+                className="w-full text-left p-3.5 rounded-xl bg-[#F4F5FA] border border-[#E3E5F0] hover:border-[#F5A623]/50 transition-all duration-150 flex items-start gap-3 group"
               >
                 <div className="w-8 h-8 rounded-full bg-[#FCEBC8] text-[#15193D] flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-[#F5A623] transition-colors">
                   {idx === 0 ? (
