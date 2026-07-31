@@ -28,8 +28,15 @@ app.post("/api/discover", async (req, res) => {
   res.setHeader("Connection", "keep-alive");
 
   const sendSSE = (event, data) => {
-    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    try {
+      res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    } catch { /* ignore */ }
   };
+
+  // Keep-alive ping every 10s to prevent HTTP response timeout
+  const keepAliveInterval = setInterval(() => {
+    sendSSE("ping", { ts: Date.now() });
+  }, 10000);
 
   try {
     const { idea, ideaRaw, studentId = "test" } = req.body || {};
@@ -37,7 +44,14 @@ app.post("/api/discover", async (req, res) => {
 
     sendSSE("progress", { message: "Starting discovery, search, and angle evaluation..." });
 
-    const phase1Result = await runDiscoveryPhase(inputIdea, studentId);
+    const phase1Result = await runDiscoveryPhase(
+      inputIdea,
+      studentId,
+      undefined,
+      (msg) => sendSSE("progress", { message: msg })
+    );
+
+    clearInterval(keepAliveInterval);
 
     if (phase1Result.status === "needs_clarification") {
       sendSSE("done", {
@@ -71,6 +85,7 @@ app.post("/api/discover", async (req, res) => {
     });
     res.end();
   } catch (err) {
+    clearInterval(keepAliveInterval);
     console.error("Error in /api/discover:", err);
     sendSSE("error", { error: err.message });
     res.end();
@@ -84,14 +99,21 @@ app.post("/api/plan", async (req, res) => {
   res.setHeader("Connection", "keep-alive");
 
   const sendSSE = (event, data) => {
-    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    try {
+      res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    } catch { /* ignore */ }
   };
+
+  const keepAliveInterval = setInterval(() => {
+    sendSSE("ping", { ts: Date.now() });
+  }, 10000);
 
   try {
     const { draftId, selection, studentId = "test" } = req.body || {};
     const phase1Data = draftStore.get(draftId);
 
     if (!phase1Data) {
+      clearInterval(keepAliveInterval);
       sendSSE("error", { error: `Draft ID '${draftId}' not found or expired.` });
       return res.end();
     }
@@ -109,6 +131,8 @@ app.post("/api/plan", async (req, res) => {
     }
 
     const planResult = await runPlanningPhase(phase1Data, targetSelection, studentId);
+    clearInterval(keepAliveInterval);
+
     const finalResults = planResult.results ? planResult.results : [planResult];
 
     finalResults.forEach((r) => {
@@ -124,6 +148,7 @@ app.post("/api/plan", async (req, res) => {
     });
     res.end();
   } catch (err) {
+    clearInterval(keepAliveInterval);
     console.error("Error in /api/plan:", err);
     sendSSE("error", { error: err.message });
     res.end();
@@ -161,6 +186,48 @@ app.get("/api/projects/:id/tasks", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// GET /api/projects/:id/tasks/:flatIndex/explain — explain a specific task using the explainer agent
+app.get("/api/projects/:id/tasks/:flatIndex/explain", async (req, res) => {
+  try {
+    const { getTaskProgress } = await import("./db/taskProgress.js");
+    const { getProjectById } = await import("./db/projectStore.js");
+    const { runExplainerAgent } = await import("./agents/explainerAgent.js");
+
+    const projectId = req.params.id;
+    const flatIndex = parseInt(req.params.flatIndex, 10);
+
+    const project = await getProjectById(projectId);
+    if (!project) return res.status(404).json({ error: "Project not found" });
+
+    const progress = await getTaskProgress(projectId);
+
+    let task = null;
+    for (const milestone of progress) {
+      const subtask = milestone.subtasks.find(s => s.flatIndex === flatIndex);
+      if (subtask) {
+        task = {
+          text: subtask.text,
+          milestone: milestone.name,
+        };
+        break;
+      }
+    }
+
+    if (!task) return res.status(404).json({ error: "Task not found" });
+
+    const explanation = await runExplainerAgent(task, {
+      architecture: project.projectData.plan.architecture,
+      tech_stack: project.projectData.plan.tech_stack,
+      angle: project.projectData.chosen_angle?.angle,
+    });
+
+    res.json({ explanation });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // GET /api/files/:fileId
 app.get("/api/files/:fileId", async (req, res) => {

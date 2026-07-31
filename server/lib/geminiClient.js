@@ -20,8 +20,9 @@ function getClient() {
   return _client;
 }
 
-const MAX_RETRIES = 5;
-const BASE_BACKOFF_MS = 5000;
+const MAX_RETRIES = 2;
+const BASE_BACKOFF_MS = 1500;
+const CALL_TIMEOUT_MS = 45000;
 
 function parseRetryDelaySec(err) {
   try {
@@ -40,17 +41,30 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function generateJSON(systemInstruction, userPrompt, model = "gemini-3.5-flash-lite") {
+function withTimeout(promise, ms, label = "Gemini API call") {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${ms / 1000}s`));
+    }, ms);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+}
+
+export async function generateJSON(systemInstruction, userPrompt, model = "gemini-3.1-flash-lite") {
   const callOnce = async (prompt) => {
-    const response = await getClient().models.generateContent({
-      model,
-      contents: prompt,
-      config: {
-        systemInstruction,
-        responseMimeType: "application/json",
-      },
-    });
-    return response.text;
+    return withTimeout(
+      getClient().models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          systemInstruction,
+          responseMimeType: "application/json",
+        },
+      }).then(res => res.text),
+      CALL_TIMEOUT_MS,
+      "generateJSON"
+    );
   };
 
   const callWithRetry = async (prompt) => {
@@ -59,13 +73,13 @@ export async function generateJSON(systemInstruction, userPrompt, model = "gemin
       try {
         return await callOnce(prompt);
       } catch (err) {
-        const isRetryable = err?.status === 429 || err?.status === 503;
+        const isRetryable = err?.status === 429 || err?.status === 503 || err?.message?.includes("timed out");
         if (isRetryable && attempt < MAX_RETRIES) {
           attempt++;
           const serverDelayMs = parseRetryDelaySec(err);
-          const waitMs = serverDelayMs ?? BASE_BACKOFF_MS * Math.pow(2, attempt - 1);
+          const waitMs = serverDelayMs ?? BASE_BACKOFF_MS * attempt;
           console.warn(
-            `[geminiClient] ${err.status} (attempt ${attempt}/${MAX_RETRIES}). ` +
+            `[geminiClient] ${err.status || err.message} (attempt ${attempt}/${MAX_RETRIES}). ` +
             `Waiting ${(waitMs / 1000).toFixed(1)}s…`
           );
           await sleep(waitMs);
@@ -93,13 +107,18 @@ export async function generateJSON(systemInstruction, userPrompt, model = "gemin
   }
 }
 
-export async function generateText(systemInstruction, userPrompt, model = "gemini-3.5-flash-lite") {
-  const response = await getClient().models.generateContent({
-    model,
-    contents: userPrompt,
-    config: {
-      systemInstruction,
-    },
-  });
-  return response.text;
+export async function generateText(systemInstruction, userPrompt, model = "gemini-3.1-flash-lite", thinkingBudget = undefined) {
+  const config = { systemInstruction };
+  if (thinkingBudget !== undefined) {
+    config.thinkingConfig = { thinkingBudget };
+  }
+  return withTimeout(
+    getClient().models.generateContent({
+      model,
+      contents: userPrompt,
+      config,
+    }).then(res => res.text),
+    CALL_TIMEOUT_MS,
+    "generateText"
+  );
 }

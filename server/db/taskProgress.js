@@ -83,6 +83,34 @@ export function markTaskDone(progress, targetFlatIndex) {
 }
 
 /**
+ * Look up a task by its 1-based human-facing display number.
+ * Mirrors the numbering shown by /tasks so /explain 3 targets exactly what
+ * the user sees labelled "3." in the task list.
+ *
+ * @param {ReturnType<typeof buildInitialTaskProgress>} taskProgress
+ * @param {number} taskNumber - 1-based
+ * @returns {{ flatIndex: number, milestone: string, text: string, done: boolean } | null}
+ */
+export function getTaskByNumber(taskProgress, taskNumber) {
+  let counter = 1;
+  for (const milestone of taskProgress) {
+    for (const subtask of milestone.subtasks) {
+      if (counter === taskNumber) {
+        return {
+          flatIndex: counter - 1,
+          milestone: milestone.name,
+          text: subtask.text,
+          done: subtask.done,
+        };
+      }
+      counter++;
+    }
+  }
+  return null;
+}
+
+
+/**
  * Persist the progress array into the existing project document in MongoDB.
  * Uses a $set patch so it never overwrites other project fields.
  *

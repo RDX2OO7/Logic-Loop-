@@ -27,13 +27,14 @@
 
 /** Map of known commands to their arg requirements. */
 const COMMAND_SPECS = {
-  start:  { args: 0 },
-  link:   { args: 1, argName: "projectId" },
-  done:   { args: 1, argName: "taskNumber", validate: isPositiveInt },
+  start: { args: 0 },
+  link: { args: 1, argName: "projectId" },
+  done: { args: 1, argName: "taskNumber", validate: isPositiveInt },
   status: { args: 0 },
-  tasks:  { args: 0 },
-  next:   { args: 0 },
+  tasks: { args: 0 },
+  next: { args: 0 },
   remind: { args: 0 },
+  explain: { args: 0 }, // 0 required; optional task number parsed below
 };
 
 function isPositiveInt(value) {
@@ -49,6 +50,16 @@ function isPositiveInt(value) {
  */
 export function parseCommand(text) {
   const raw = (text ?? "").trim();
+
+  // Not a command at all — but check for dot-commands like .task first
+  if (raw.startsWith(".")) {
+    const dotParts = raw.split(/\s+/);
+    const dotCmd = dotParts[0].slice(1).toLowerCase(); // strip leading dot
+    if (dotCmd === "task") {
+      return { type: "command", command: "task", raw };
+    }
+    return { type: "text", raw };
+  }
 
   // Not a command at all
   if (!raw.startsWith("/")) {
@@ -93,8 +104,20 @@ export function parseCommand(text) {
   // Build the result object with command-specific extra fields
   const result = { type: "command", command, raw };
 
-  if (command === "link")   result.projectId   = args[0];
-  if (command === "done")   result.taskNumber  = parseInt(args[0], 10);
+  if (command === "link") result.projectId = args[0];
+  if (command === "done") result.taskNumber = parseInt(args[0], 10);
+
+  if (command === "explain") {
+    if (args.length === 0) {
+      result.taskNumber = null; // means "use next incomplete"
+    } else {
+      const n = Number(args[0]);
+      if (Number.isNaN(n) || !Number.isInteger(n) || n < 1) {
+        return { type: "error", command, message: `Usage: /explain or /explain <task number>`, raw };
+      }
+      result.taskNumber = n;
+    }
+  }
 
   return result;
 }

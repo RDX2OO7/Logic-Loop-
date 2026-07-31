@@ -1,5 +1,11 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import { XMLParser } from "fast-xml-parser";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
 
 const xmlParser = new XMLParser({ ignoreAttributes: false });
 
@@ -7,10 +13,12 @@ function safeId(source, index) {
   return `${source}-${index}-${Date.now().toString(36)}`;
 }
 
+const FETCH_TIMEOUT_MS = 4000;
+
 export async function searchArxiv(query, maxResults = 5) {
   try {
     const url = `http://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(query)}&start=0&max_results=${maxResults}`;
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
     if (!res.ok) return [];
     const xml = await res.text();
     return parseArxivXml(xml);
@@ -40,7 +48,7 @@ export async function searchSemanticScholar(query, limit = 5) {
       ? { "x-api-key": process.env.SEMANTIC_SCHOLAR_KEY }
       : {};
     const url = `https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(query)}&limit=${limit}&fields=title,abstract,url`;
-    const res = await fetch(url, { headers });
+    const res = await fetch(url, { headers, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
     if (!res.ok) return [];
     const data = await res.json();
     return (data.data || []).map((p, i) => ({
@@ -60,7 +68,7 @@ export async function searchOpenAlex(query, perPage = 5) {
   try {
     const mailto = process.env.MY_EMAIL || "";
     const url = `https://api.openalex.org/works?search=${encodeURIComponent(query)}&per-page=${perPage}${mailto ? `&mailto=${encodeURIComponent(mailto)}` : ""}`;
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
     if (!res.ok) return [];
     const data = await res.json();
     return (data.results || []).map((w, i) => ({
@@ -87,6 +95,7 @@ export async function searchTavily(query, maxResults = 5) {
         query,
         max_results: maxResults,
       }),
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -108,7 +117,7 @@ export async function searchGitHub(query, perPage = 5) {
     const headers = { Accept: "application/vnd.github+json" };
     if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
     const url = `https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&sort=stars&order=desc&per_page=${perPage}`;
-    const res = await fetch(url, { headers });
+    const res = await fetch(url, { headers, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
     if (!res.ok) return [];
     const data = await res.json();
     return (data.items || []).map((r, i) => ({
@@ -139,13 +148,19 @@ export function mergeAndDedupe(...resultArrays) {
 }
 
 export async function runDeepSearchAgent(query) {
-  const [arxiv, semanticScholar, openAlex, web, repos] = await Promise.all([
+  const [arxivRes, semanticRes, openAlexRes, webRes, reposRes] = await Promise.allSettled([
     searchArxiv(query),
     searchSemanticScholar(query),
     searchOpenAlex(query),
     searchTavily(query),
     searchGitHub(query),
   ]);
+
+  const arxiv = arxivRes.status === "fulfilled" ? arxivRes.value : [];
+  const semanticScholar = semanticRes.status === "fulfilled" ? semanticRes.value : [];
+  const openAlex = openAlexRes.status === "fulfilled" ? openAlexRes.value : [];
+  const web = webRes.status === "fulfilled" ? webRes.value : [];
+  const repos = reposRes.status === "fulfilled" ? reposRes.value : [];
 
   return {
     papers: mergeAndDedupe(arxiv, semanticScholar, openAlex),

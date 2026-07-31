@@ -43,11 +43,12 @@ function flattenSourceIds(deepSearchResult) {
  * Phase 1: Discovery, DeepSearch, Relevance Filtering, Clustering, Gap & Innovation reasoning, and Angle Ranking.
  * Does NOT auto-pick a single angle — returns ALL ranked angles for the student to select from.
  */
-export async function runDiscoveryPhase(ideaRaw, studentId, deps = defaultDeps) {
+export async function runDiscoveryPhase(ideaRaw, studentId, deps = defaultDeps, onProgress = () => { }) {
   const log = [];
   const step = (msg) => log.push(msg);
 
   step("discovery: start");
+  onProgress("Discovery Agent: analyzing problem boundary...");
   const discovery = await deps.discoveryAgent(ideaRaw);
   if (discovery.needs_clarification) {
     step("discovery: needs clarification, halting");
@@ -56,20 +57,24 @@ export async function runDiscoveryPhase(ideaRaw, studentId, deps = defaultDeps) 
   step("discovery: validated");
 
   step("deepSearch: start");
+  onProgress("DeepSearch Agent: querying academic databases & repositories in parallel...");
   const deepSearchResult = await deps.deepSearchAgent(discovery.normalized_problem);
   step(`deepSearch: ${flattenSourceIds(deepSearchResult).length} sources found`);
 
   step("relevanceFilter: start");
+  onProgress("Filtering relevant literature and web sources...");
   const filteredResult = await deps.relevanceFilterAgent(deepSearchResult, discovery.normalized_problem);
   step(`relevanceFilter: kept ${filteredResult._kept_count}, dropped ${filteredResult._dropped_count} off-topic source(s)`);
 
   const sourceIds = flattenSourceIds(filteredResult);
 
   step("clustering: start");
+  onProgress("Clustering Agent: synthesizing research themes...");
   const clustering = await deps.clusteringAgent(filteredResult);
   step(`clustering: ${clustering.clusters?.length || 0} clusters`);
 
   step("gapAgent: start");
+  onProgress("Gap & Innovation Agent: identifying literature voids & project angles...");
   const gapResult = await deps.gapAgent(filteredResult, discovery.normalized_problem);
   if (gapResult.insufficient_evidence || !gapResult.innovation_angles?.length) {
     step("gapAgent: insufficient evidence, halting");

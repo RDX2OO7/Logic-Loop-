@@ -117,11 +117,10 @@ export const TabRoadmap: React.FC<TabRoadmapProps> = ({ plan, projectId }) => {
         <div className="flex items-center gap-1.5 p-1 bg-[#F4F5FA] border border-[#E3E5F0] rounded-xl">
           <button
             onClick={() => setActiveSubTab('timeline')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
-              activeSubTab === 'timeline'
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${activeSubTab === 'timeline'
                 ? 'bg-[#15193D] text-[#F5A623] shadow-xs'
                 : 'text-[#6B7280] hover:text-[#15193D] hover:bg-white/60'
-            }`}
+              }`}
           >
             <Calendar className="w-3.5 h-3.5" />
             <span>Milestone Roadmap ({totalDays}d)</span>
@@ -129,11 +128,10 @@ export const TabRoadmap: React.FC<TabRoadmapProps> = ({ plan, projectId }) => {
 
           <button
             onClick={() => setActiveSubTab('stack')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
-              activeSubTab === 'stack'
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${activeSubTab === 'stack'
                 ? 'bg-[#15193D] text-[#F5A623] shadow-xs'
                 : 'text-[#6B7280] hover:text-[#15193D] hover:bg-white/60'
-            }`}
+              }`}
           >
             <Code className="w-3.5 h-3.5" />
             <span>Detailed Tech Stack</span>
@@ -141,11 +139,10 @@ export const TabRoadmap: React.FC<TabRoadmapProps> = ({ plan, projectId }) => {
 
           <button
             onClick={() => setActiveSubTab('ui')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
-              activeSubTab === 'ui'
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${activeSubTab === 'ui'
                 ? 'bg-[#15193D] text-[#F5A623] shadow-xs'
                 : 'text-[#6B7280] hover:text-[#15193D] hover:bg-white/60'
-            }`}
+              }`}
           >
             <Layout className="w-3.5 h-3.5" />
             <span>UI & Frontend Spec</span>
@@ -153,11 +150,10 @@ export const TabRoadmap: React.FC<TabRoadmapProps> = ({ plan, projectId }) => {
 
           <button
             onClick={() => setActiveSubTab('endpoints')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
-              activeSubTab === 'endpoints'
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${activeSubTab === 'endpoints'
                 ? 'bg-[#15193D] text-[#F5A623] shadow-xs'
                 : 'text-[#6B7280] hover:text-[#15193D] hover:bg-white/60'
-            }`}
+              }`}
           >
             <Terminal className="w-3.5 h-3.5" />
             <span>API & Data Pipeline</span>
@@ -165,11 +161,10 @@ export const TabRoadmap: React.FC<TabRoadmapProps> = ({ plan, projectId }) => {
 
           <button
             onClick={() => setActiveSubTab('deployment')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
-              activeSubTab === 'deployment'
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${activeSubTab === 'deployment'
                 ? 'bg-[#15193D] text-[#F5A623] shadow-xs'
                 : 'text-[#6B7280] hover:text-[#15193D] hover:bg-white/60'
-            }`}
+              }`}
           >
             <Rocket className="w-3.5 h-3.5" />
             <span>Deployment & DevOps</span>
@@ -243,19 +238,17 @@ export const TabRoadmap: React.FC<TabRoadmapProps> = ({ plan, projectId }) => {
                       className="flex flex-col items-center group transition-all duration-150 focus:outline-none"
                     >
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-[13px] border-2 transition-all duration-150 ${
-                          isSelected
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-[13px] border-2 transition-all duration-150 ${isSelected
                             ? 'bg-[#15193D] text-[#F5A623] border-[#F5A623] scale-110 shadow-md'
                             : 'bg-white text-[#15193D] border-[#E3E5F0] hover:border-[#15193D]'
-                        }`}
+                          }`}
                       >
                         0{idx + 1}
                       </div>
 
                       <div className="mt-3 text-center space-y-1">
-                        <div className={`text-[12px] font-semibold line-clamp-1 transition-colors ${
-                          isSelected ? 'text-[#15193D]' : 'text-[#6B7280] group-hover:text-[#15193D]'
-                        }`}>
+                        <div className={`text-[12px] font-semibold line-clamp-1 transition-colors ${isSelected ? 'text-[#15193D]' : 'text-[#6B7280] group-hover:text-[#15193D]'
+                          }`}>
                           {milestone.name.split(':')[0]}
                         </div>
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white border border-[#E3E5F0] text-[10px] font-medium text-[#6B7280]">
@@ -320,11 +313,10 @@ export const TabRoadmap: React.FC<TabRoadmapProps> = ({ plan, projectId }) => {
                         return (
                           <div
                             key={i}
-                            className={`p-3 rounded-lg border text-[12.5px] font-medium flex items-start gap-2.5 transition-colors duration-300 ${
-                              done
+                            className={`p-3 rounded-lg border text-[12.5px] font-medium flex items-start gap-2.5 transition-colors duration-300 ${done
                                 ? 'bg-[#F0FDF4] border-[#16A34A]/20'
                                 : 'bg-[#F4F5FA] border-[#E3E5F0]'
-                            }`}
+                              }`}
                           >
                             {done ? (
                               <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
@@ -581,11 +573,10 @@ export const TabRoadmap: React.FC<TabRoadmapProps> = ({ plan, projectId }) => {
               {endpoints.map((ep, idx) => (
                 <div key={idx} className="bg-white border border-[#E3E5F0] rounded-xl p-5 space-y-3 shadow-2xs">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold font-mono ${
-                      ep.method === 'POST' ? 'bg-blue-100 text-blue-800' :
-                      ep.method === 'GET' ? 'bg-green-100 text-green-800' :
-                      ep.method === 'WS' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
+                    <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold font-mono ${ep.method === 'POST' ? 'bg-blue-100 text-blue-800' :
+                        ep.method === 'GET' ? 'bg-green-100 text-green-800' :
+                          ep.method === 'WS' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
                       {ep.method}
                     </span>
                     <span className="text-[14px] font-mono font-semibold text-[#15193D]">

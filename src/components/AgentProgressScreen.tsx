@@ -117,7 +117,12 @@ export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({
         { idea: ideaText, ideaRaw: ideaText, studentId: 'demo-student' },
         (event, data) => {
           if (event === 'progress') {
-            setStatusMessage(data.message || 'Processing...');
+            const msg = data.message || 'Processing...';
+            setStatusMessage(msg);
+            if (msg.includes('Discovery Agent')) setActiveIndex(0);
+            else if (msg.includes('DeepSearch')) setActiveIndex(1);
+            else if (msg.includes('Filtering') || msg.includes('Clustering')) setActiveIndex(2);
+            else if (msg.includes('Gap & Innovation')) setActiveIndex(3);
           } else if (event === 'done') {
             setActiveIndex(4); // Nodes 0..3 done
             const angleCount = data?.angles?.length ?? 0;
@@ -203,7 +208,7 @@ export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({
   return (
     <div className="flex-1 min-h-screen bg-[#FFFFFF] flex flex-col justify-center items-center px-8 py-12">
       <div className="w-full max-w-[680px] space-y-6">
-        
+
         {/* Submitted Idea Header */}
         <div className="text-center space-y-2">
           <div className="text-[12px] font-semibold uppercase tracking-wider text-[#6B7280]">
@@ -249,13 +254,12 @@ export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({
                   opacity: isPending ? 0.4 : 1,
                 }}
                 transition={{ duration: 0.2 }}
-                className={`flex items-center gap-4 px-4 rounded-xl transition-colors ${
-                  isActive
-                    ? 'bg-white border border-[#E3E5F0] shadow-xs'
-                    : isDone
+                className={`flex items-center gap-4 px-4 rounded-xl transition-colors ${isActive
+                  ? 'bg-white border border-[#E3E5F0] shadow-xs'
+                  : isDone
                     ? 'bg-transparent'
                     : 'bg-transparent'
-                }`}
+                  }`}
               >
                 {/* Agent Icon Circle */}
                 <div className="relative shrink-0">
@@ -293,9 +297,8 @@ export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2.5">
                     <span
-                      className={`text-[14px] font-semibold ${
-                        isActive ? 'text-[#15193D]' : isDone ? 'text-[#1F2340]' : 'text-[#6B7280]'
-                      }`}
+                      className={`text-[14px] font-semibold ${isActive ? 'text-[#15193D]' : isDone ? 'text-[#1F2340]' : 'text-[#6B7280]'
+                        }`}
                     >
                       {agent.name}
                     </span>
@@ -312,15 +315,14 @@ export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({
                   </div>
 
                   <p
-                    className={`text-[12px] truncate mt-0.5 ${
-                      isActive ? 'text-[#15193D] font-medium' : 'text-[#6B7280]'
-                    }`}
+                    className={`text-[12px] truncate mt-0.5 ${isActive ? 'text-[#15193D] font-medium' : 'text-[#6B7280]'
+                      }`}
                   >
                     {isActive
                       ? agent.activeDescription
                       : isDone
-                      ? agent.completedDescription
-                      : agent.description}
+                        ? agent.completedDescription
+                        : agent.description}
                   </p>
                 </div>
               </motion.div>
