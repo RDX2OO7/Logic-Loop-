@@ -8,6 +8,7 @@ import { CompareResultsScreen } from './components/CompareResultsScreen';
 import { ResultsDashboard } from './components/ResultsDashboard/ResultsDashboard';
 import { NeedsClarificationCard } from './components/NeedsClarificationCard';
 import { InsufficientEvidenceCard } from './components/InsufficientEvidenceCard';
+import { HelpChatBot } from './components/HelpChatBot';
 import { CopilotData, Phase1Result } from './types';
 import { mapOrchestratorToCopilotData } from './utils/mapper';
 
@@ -20,14 +21,66 @@ export interface HistoryEntry {
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenState>('input');
-  const [submittedIdea, setSubmittedIdea] = useState<string>('');
+  const [submittedIdea, setSubmittedIdea] = useState<string>(() => {
+    return localStorage.getItem('researchos_idea') || '';
+  });
   const [phase1Data, setPhase1Data] = useState<Phase1Result | null>(null);
   const [selectedRank, setSelectedRank] = useState<number | null>(null);
-  const [copilotData, setCopilotData] = useState<CopilotData | null>(null);
+  const [copilotData, setCopilotData] = useState<CopilotData | null>(() => {
+    const saved = localStorage.getItem('researchos_copilot_data');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { return null; }
+    }
+    return null;
+  });
   // Raw results array for the compare screen (all angles)
   const [compareResults, setCompareResults] = useState<any[]>([]);
   // Persistent in-session history of completed plans
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [history, setHistory] = useState<HistoryEntry[]>(() => {
+    const saved = localStorage.getItem('researchos_history');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((item: any) => ({ ...item, createdAt: new Date(item.createdAt) }));
+      } catch (e) { return []; }
+    }
+    return [];
+  });
+
+  // Save history to localStorage on change
+  useEffect(() => {
+    localStorage.setItem('researchos_history', JSON.stringify(history));
+  }, [history]);
+
+  // Save submittedIdea to localStorage on change
+  useEffect(() => {
+    if (submittedIdea) {
+      localStorage.setItem('researchos_idea', submittedIdea);
+    }
+  }, [submittedIdea]);
+
+  const hasValidPlanData = (data: CopilotData | null): boolean => {
+    if (!data) return false;
+    if (data.pipelineStatus === 'error') return false;
+    const paperCount = data.sources?.papers?.length || 0;
+    const repoCount = data.sources?.repos?.length || 0;
+    const webCount = data.sources?.web?.length || 0;
+    return paperCount + repoCount + webCount > 0 || !!data.plan?.architecture;
+  };
+
+  // Save copilotData to localStorage on change if valid
+  useEffect(() => {
+    if (copilotData && hasValidPlanData(copilotData)) {
+      localStorage.setItem('researchos_copilot_data', JSON.stringify(copilotData));
+    }
+  }, [copilotData]);
+
+  // On initial render: if we have cached copilotData and no active workflow screen, show results
+  useEffect(() => {
+    if (copilotData && hasValidPlanData(copilotData) && currentScreen === 'input') {
+      setCurrentScreen('results');
+    }
+  }, []);
 
   const handleIdeaSubmit = (ideaText: string) => {
     setSubmittedIdea(ideaText);
@@ -43,6 +96,7 @@ export default function App() {
     if (data.status === 'needs_clarification' || data.status === 'insufficient_evidence') {
       const realCopilotData = mapOrchestratorToCopilotData(data, submittedIdea, 2.0);
       setCopilotData(realCopilotData);
+      localStorage.setItem('researchos_copilot_data', JSON.stringify(realCopilotData));
       setCurrentScreen('results');
     } else {
       setCurrentScreen('angle_selection');
@@ -71,6 +125,7 @@ export default function App() {
     const singleResult = resultsData.results ? resultsData.results[0] : resultsData;
     const realCopilotData = mapOrchestratorToCopilotData(singleResult, submittedIdea, 5.0);
     setCopilotData(realCopilotData);
+    localStorage.setItem('researchos_copilot_data', JSON.stringify(realCopilotData));
     pushToHistory(singleResult?.projectData?.title || submittedIdea, submittedIdea);
     setCurrentScreen('results');
   };
@@ -94,11 +149,24 @@ export default function App() {
   const handlePickFromCompare = (result: any) => {
     const realCopilotData = mapOrchestratorToCopilotData(result, submittedIdea, 5.0);
     setCopilotData(realCopilotData);
+    localStorage.setItem('researchos_copilot_data', JSON.stringify(realCopilotData));
     setCurrentScreen('results');
   };
 
   const handleError = (errorMsg: string) => {
     console.error('[UI Pipeline Error]:', errorMsg);
+    // If we already have a valid cached plan, retain it!
+    const saved = localStorage.getItem('researchos_copilot_data');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (hasValidPlanData(parsed)) {
+          setCopilotData(parsed);
+          setCurrentScreen('results');
+          return;
+        }
+      } catch (e) { /* ignore */ }
+    }
     const fallbackData = mapOrchestratorToCopilotData({ status: 'error' }, submittedIdea, 0);
     setCopilotData(fallbackData);
     setCurrentScreen('results');
@@ -110,11 +178,14 @@ export default function App() {
     setSelectedRank(null);
     setCopilotData(null);
     setCompareResults([]);
+    localStorage.removeItem('researchos_copilot_data');
+    localStorage.removeItem('researchos_idea');
     setCurrentScreen('input');
   };
 
   const handleClearHistory = () => {
     setHistory([]);
+    localStorage.removeItem('researchos_history');
   };
 
   // Initialise html.dark from localStorage on first load
@@ -223,6 +294,9 @@ export default function App() {
             </div>
           ))}
       </main>
+
+      {/* Global Help Chatbot — bottom-right, visible on all screens */}
+      <HelpChatBot />
     </div>
   );
 }

@@ -94,40 +94,40 @@ body {
 
 /* Page & Container Backgrounds */
 html.dark .bg-white,
-html.dark .bg-\[#FFFFFF\] {
+html.dark [class*="bg-[#FFFFFF]"] {
   background-color: var(--bg-page) !important;
 }
 
-html.dark .bg-\[#F4F5FA\] {
+html.dark [class*="bg-[#F4F5FA]"] {
   background-color: var(--bg-card) !important;
 }
 
-html.dark .bg-\[#F9FAFB\] {
+html.dark [class*="bg-[#F9FAFB]"] {
   background-color: #14192b !important;
 }
 
-html.dark .bg-\[#F0FDF4\] {
+html.dark [class*="bg-[#F0FDF4]"] {
   background-color: #0d2618 !important;
 }
 
-html.dark .bg-\[#15193D\]\/5 {
+html.dark [class*="bg-[#15193D]/5"] {
   background-color: rgba(255, 255, 255, 0.06) !important;
 }
 
-html.dark .bg-\[#15193D\]\/10 {
+html.dark [class*="bg-[#15193D]/10"] {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Dark mode overrides for dark text classes to ensure maximum readability */
-html.dark .text-\[#15193D\],
-html.dark .text-\[#1F2340\],
-html.dark .text-\[#0F1220\],
-html.dark .text-\[#0E112A\],
-html.dark .text-\[#111827\],
-html.dark .text-\[#1E293B\],
-html.dark .text-\[#0F172A\],
-html.dark .text-[#111928],
-html.dark .text-[#1E2040],
+html.dark [class*="text-[#15193D]"],
+html.dark [class*="text-[#1F2340]"],
+html.dark [class*="text-[#0F1220]"],
+html.dark [class*="text-[#0E112A]"],
+html.dark [class*="text-[#111827]"],
+html.dark [class*="text-[#1E293B]"],
+html.dark [class*="text-[#0F172A]"],
+html.dark [class*="text-[#111928]"],
+html.dark [class*="text-[#1E2040]"],
 html.dark .text-black,
 html.dark .text-slate-900,
 html.dark .text-slate-800,
@@ -145,8 +145,8 @@ html.dark .text-neutral-700 {
 }
 
 /* Secondary & Body Text */
-html.dark .text-\[#374151\],
-html.dark .text-\[#4B5563\],
+html.dark [class*="text-[#374151]"],
+html.dark [class*="text-[#4B5563]"],
 html.dark .text-slate-600,
 html.dark .text-gray-600,
 html.dark .text-zinc-600,
@@ -155,7 +155,7 @@ html.dark .text-neutral-600 {
 }
 
 /* Muted Subtitles & Labels */
-html.dark .text-\[#6B7280\],
+html.dark [class*="text-[#6B7280]"],
 html.dark .text-slate-500,
 html.dark .text-gray-500,
 html.dark .text-zinc-500,
@@ -164,45 +164,45 @@ html.dark .text-neutral-500 {
 }
 
 /* Faint Text */
-html.dark .text-\[#9CA3AF\],
+html.dark [class*="text-[#9CA3AF]"],
 html.dark .text-slate-400,
 html.dark .text-gray-400 {
   color: #94a3b8 !important;
 }
 
 /* Hover state text overrides */
-html.dark .hover\:text-\[#15193D\]:hover {
+html.dark [class*="hover:text-[#15193D]"]:hover {
   color: #ffffff !important;
 }
 
 /* Borders in dark mode */
-html.dark .border-\[#E3E5F0\] {
+html.dark [class*="border-[#E3E5F0]"] {
   border-color: var(--border-color) !important;
 }
 
-html.dark .border-\[#15193D\]\/10 {
+html.dark [class*="border-[#15193D]/10"] {
   border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
-html.dark .border-\[#15193D\]\/20 {
+html.dark [class*="border-[#15193D]/20"] {
   border-color: rgba(255, 255, 255, 0.25) !important;
 }
 
-html.dark .border-\[#86EFAC\]\/60 {
+html.dark [class*="border-[#86EFAC]/60"] {
   border-color: #166534 !important;
 }
 
 /* Badges & Pills */
-html.dark .bg-\[#15193D\] {
+html.dark [class*="bg-[#15193D]"] {
   background-color: var(--badge-navy-bg) !important;
 }
 
 /* Amber tint surfaces */
-html.dark .bg-\[#FCEBC8\] {
+html.dark [class*="bg-[#FCEBC8]"] {
   background-color: var(--amber-tint) !important;
 }
 
-html.dark .bg-\[#FEF3C7\] {
+html.dark [class*="bg-[#FEF3C7]"] {
   background-color: var(--amber-tint) !important;
 }
 
@@ -220,7 +220,7 @@ html.dark textarea::placeholder {
 }
 
 /* Table rows & zebra stripes */
-html.dark .hover\:bg-\[#F4F5FA\]:hover,
+html.dark [class*="hover:bg-[#F4F5FA]"]:hover,
 html.dark .hover\:bg-white\/60:hover {
   background-color: #242c48 !important;
 }
@@ -234,11 +234,11 @@ html.dark .bg-white.rounded-3xl {
 }
 
 /* Success green surfaces */
-html.dark .text-\[#16A34A\] {
+html.dark [class*="text-[#16A34A]"] {
   color: #34d399 !important;
 }
 
-html.dark .text-\[#15803D\] {
+html.dark [class*="text-[#15803D]"] {
   color: #4ade80 !important;
 }
 

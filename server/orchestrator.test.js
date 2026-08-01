@@ -52,7 +52,7 @@ async function main() {
     criticAgent: async () => ({ approved: true, issues: [] }),
     docxPublisher: async () => Buffer.from("fake"),
     pptxPublisher: async () => Buffer.from("fake"),
-    projectSaver: async () => ({ projectId: "fake", docxFileId: "d1", pptxFileId: "p1" }),
+    projectSaver: async () => ({ projectId: "123456789012345678901234", docxFileId: "d1", pptxFileId: "p1" }),
   };
 
   const r3 = await runPlanningPhase(r2, 0, "student3", mockPlannerDeps);

@@ -90,7 +90,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ result, idx }) => {
 
   return (
     <div className="flex flex-col h-full bg-[#F4F5FA] border border-[#E3E5F0] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
-      
+
       {/* Card Header */}
       <div className="p-5 bg-white border-b border-[#E3E5F0] space-y-3">
         {/* Rank + Critic Status */}
@@ -304,8 +304,8 @@ export const CompareResultsScreen: React.FC<CompareResultsScreenProps> = ({
     sortedResults.length === 1
       ? 'grid-cols-1 max-w-[500px] mx-auto'
       : sortedResults.length === 2
-      ? 'grid-cols-1 lg:grid-cols-2'
-      : 'grid-cols-1 lg:grid-cols-3';
+        ? 'grid-cols-1 lg:grid-cols-2'
+        : 'grid-cols-1 lg:grid-cols-3';
 
   return (
     <div className="flex-1 min-h-screen bg-[#FAFAFA] px-6 py-10 overflow-y-auto">
@@ -345,11 +345,10 @@ export const CompareResultsScreen: React.FC<CompareResultsScreenProps> = ({
                 <button
                   key={idx}
                   onClick={() => setActiveTab(idx)}
-                  className={`px-4 py-2 rounded-xl text-[13px] font-semibold transition-all duration-150 ${
-                    activeTab === idx
-                      ? 'bg-[#15193D] text-white shadow-sm'
-                      : 'bg-white border border-[#E3E5F0] text-[#6B7280] hover:border-[#15193D]/20 hover:text-[#15193D]'
-                  }`}
+                  className={`px-4 py-2 rounded-xl text-[13px] font-semibold transition-all duration-150 ${activeTab === idx
+                    ? 'bg-[#15193D] text-white shadow-sm'
+                    : 'bg-white border border-[#E3E5F0] text-[#6B7280] hover:border-[#15193D]/20 hover:text-[#15193D]'
+                    }`}
                 >
                   #{rank} — Angle {rank}
                 </button>

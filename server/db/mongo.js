@@ -2,10 +2,18 @@ import { MongoClient, GridFSBucket } from "mongodb";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import dns from "dns";
 
 // Always resolve .env from server/ regardless of where node is run from
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
+// Resolve SRV DNS query issues (querySrv ECONNREFUSED) common on Windows / local ISP DNS
+try {
+  dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"]);
+} catch (e) {
+  // Ignore fallback error
+}
 
 let _client = null;
 let _db = null;

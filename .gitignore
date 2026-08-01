@@ -11,3 +11,5 @@ exports/
 server/exports/
 
 
+.vercel
+.env*

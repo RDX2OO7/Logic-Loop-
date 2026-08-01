@@ -110,22 +110,29 @@ export function getTaskByNumber(taskProgress, taskNumber) {
 }
 
 
+const inMemoryTaskProgress = new Map();
+const inMemoryTelegramChats = new Map();
+
 /**
- * Persist the progress array into the existing project document in MongoDB.
- * Uses a $set patch so it never overwrites other project fields.
+ * Persist the progress array into the existing project document in MongoDB or in-memory fallback.
  *
  * @param {string} projectId   - The string form of the project's ObjectId
  * @param {ReturnType<typeof buildInitialTaskProgress>} taskProgress
  * @returns {Promise<void>}
  */
 export async function saveTaskProgress(projectId, taskProgress) {
-  const { getDb } = await import("./mongo.js");
-  const { ObjectId } = await import("mongodb");
-  const db = await getDb();
-  await db.collection("projects").updateOne(
-    { _id: new ObjectId(projectId) },
-    { $set: { taskProgress } }
-  );
+  inMemoryTaskProgress.set(projectId, taskProgress);
+  try {
+    const { getDb } = await import("./mongo.js");
+    const { ObjectId } = await import("mongodb");
+    const db = await getDb();
+    await db.collection("projects").updateOne(
+      { _id: new ObjectId(projectId) },
+      { $set: { taskProgress } }
+    );
+  } catch (err) {
+    console.warn("[TaskProgress] Mongo saveTaskProgress failed, saved to memory fallback:", err.message);
+  }
 }
 
 /**
@@ -153,34 +160,43 @@ export function getProgressSummary(progress) {
 
 /**
  * Associate a Telegram chat ID with a project so the bot can push updates.
- * Stores chatId as a string (Telegram IDs are safe as strings on all platforms).
  *
  * @param {number|string} chatId   - Telegram chat.id
  * @param {string}        projectId - MongoDB project ObjectId string
  * @returns {Promise<void>}
  */
 export async function linkTelegramChat(chatId, projectId) {
-  const { getDb } = await import("./mongo.js");
-  const { ObjectId } = await import("mongodb");
-  const db = await getDb();
-  await db.collection("projects").updateOne(
-    { _id: new ObjectId(projectId) },
-    { $set: { telegramChatId: String(chatId) } }
-  );
+  inMemoryTelegramChats.set(String(chatId), projectId);
+  try {
+    const { getDb } = await import("./mongo.js");
+    const { ObjectId } = await import("mongodb");
+    const db = await getDb();
+    await db.collection("projects").updateOne(
+      { _id: new ObjectId(projectId) },
+      { $set: { telegramChatId: String(chatId) } }
+    );
+  } catch (err) {
+    console.warn("[TaskProgress] Mongo linkTelegramChat failed, saved to memory fallback:", err.message);
+  }
 }
 
 /**
- * Retrieve the current taskProgress array for a project from MongoDB.
+ * Retrieve the current taskProgress array for a project from MongoDB or in-memory fallback.
  *
  * @param {string} projectId - MongoDB project ObjectId string
  * @returns {Promise<Array>} taskProgress array or []
  */
 export async function getTaskProgress(projectId) {
-  const { getDb } = await import("./mongo.js");
-  const { ObjectId } = await import("mongodb");
-  const db = await getDb();
-  const project = await db.collection("projects").findOne({ _id: new ObjectId(projectId) });
-  return project?.taskProgress || [];
+  try {
+    const { getDb } = await import("./mongo.js");
+    const { ObjectId } = await import("mongodb");
+    const db = await getDb();
+    const project = await db.collection("projects").findOne({ _id: new ObjectId(projectId) });
+    if (project?.taskProgress) return project.taskProgress;
+  } catch (err) {
+    console.warn("[TaskProgress] Mongo getTaskProgress failed:", err.message);
+  }
+  return inMemoryTaskProgress.get(projectId) || [];
 }
 
 /**
@@ -190,19 +206,22 @@ export async function getTaskProgress(projectId) {
  * @returns {Promise<string|null>} projectId string or null if not linked
  */
 export async function getLinkedProjectId(chatId) {
-  const { getDb } = await import("./mongo.js");
-  const db = await getDb();
-  const project = await db.collection("projects").findOne(
-    { telegramChatId: String(chatId) },
-    { sort: { createdAt: -1 } }
-  );
-  return project ? project._id.toString() : null;
+  try {
+    const { getDb } = await import("./mongo.js");
+    const db = await getDb();
+    const project = await db.collection("projects").findOne(
+      { telegramChatId: String(chatId) },
+      { sort: { createdAt: -1 } }
+    );
+    if (project) return project._id.toString();
+  } catch (err) {
+    console.warn("[TaskProgress] Mongo getLinkedProjectId failed:", err.message);
+  }
+  return inMemoryTelegramChats.get(String(chatId)) || null;
 }
 
 /**
- * Mark a specific subtask done (or undone) directly in MongoDB by its flatIndex.
- * Uses arrayFilters for a targeted nested-array update — no read-modify-write needed.
- * Throws if no document is matched (wrong projectId) so the caller can surface the error.
+ * Mark a specific subtask done (or undone) directly in MongoDB or in-memory fallback by its flatIndex.
  *
  * @param {string}  projectId   - MongoDB project ObjectId string
  * @param {number}  flatIndex   - 0-based flat index (= display number − 1)
@@ -210,21 +229,33 @@ export async function getLinkedProjectId(chatId) {
  * @returns {Promise<void>}
  */
 export async function setTaskDone(projectId, flatIndex, done = true) {
-  const { getDb } = await import("./mongo.js");
-  const { ObjectId } = await import("mongodb");
-  const db = await getDb();
-  const result = await db.collection("projects").updateOne(
-    { _id: new ObjectId(projectId), "taskProgress.subtasks.flatIndex": flatIndex },
-    { $set: { "taskProgress.$[m].subtasks.$[s].done": done } },
-    {
-      arrayFilters: [
-        { "m.subtasks.flatIndex": flatIndex },
-        { "s.flatIndex": flatIndex },
-      ],
+  const currentProgress = inMemoryTaskProgress.get(projectId);
+  if (currentProgress) {
+    markTaskDone(currentProgress, flatIndex);
+  }
+
+  try {
+    const { getDb } = await import("./mongo.js");
+    const { ObjectId } = await import("mongodb");
+    const db = await getDb();
+    const result = await db.collection("projects").updateOne(
+      { _id: new ObjectId(projectId), "taskProgress.subtasks.flatIndex": flatIndex },
+      { $set: { "taskProgress.$[m].subtasks.$[s].done": done } },
+      {
+        arrayFilters: [
+          { "m.subtasks.flatIndex": flatIndex },
+          { "s.flatIndex": flatIndex },
+        ],
+      }
+    );
+    if (result.matchedCount === 0 && !currentProgress) {
+      throw new Error(`No task with flatIndex ${flatIndex} found in project ${projectId}.`);
     }
-  );
-  if (result.matchedCount === 0) {
-    throw new Error(`No task with flatIndex ${flatIndex} found in project ${projectId}.`);
+  } catch (err) {
+    if (!currentProgress) {
+      throw err;
+    }
+    console.warn("[TaskProgress] Mongo setTaskDone failed, updated in-memory fallback:", err.message);
   }
 }
 

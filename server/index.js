@@ -2,6 +2,15 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import dns from "dns";
+
+// Fix SRV DNS lookup issues (querySrv ECONNREFUSED) for MongoDB Atlas on Windows/local networks
+try {
+  dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"]);
+} catch (e) {
+  // Ignore fallback error
+}
+
 import { runDiscoveryPhase, runPlanningPhase, runResearchOSPipeline } from "./orchestrator.js";
 import { streamFileById, listProjects, getProjectById } from "./db/projectStore.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
