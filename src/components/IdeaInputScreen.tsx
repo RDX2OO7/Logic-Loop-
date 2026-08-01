@@ -110,8 +110,8 @@ export const IdeaInputScreen: React.FC<IdeaInputScreenProps> = ({ onSubmitIdea }
               type="submit"
               disabled={!ideaText.trim()}
               className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-[14px] font-semibold transition-all duration-150 ${ideaText.trim()
-                  ? 'bg-[#F5A623] text-[#15193D] hover:brightness-105 shadow-sm active:scale-[0.98]'
-                  : 'bg-[#E3E5F0] dark:bg-[#262e4a] text-[#6B7280] dark:text-[#64748b] cursor-not-allowed'
+                ? 'bg-[#F5A623] text-[#15193D] hover:brightness-105 shadow-sm active:scale-[0.98]'
+                : 'bg-[#E3E5F0] dark:bg-[#262e4a] text-[#6B7280] dark:text-[#64748b] cursor-not-allowed'
                 }`}
             >
               <span>Generate project plan</span>

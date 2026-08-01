@@ -16,6 +16,7 @@
     "fast-xml-parser": "^5.10.1",
     "ml-kmeans": "^7.0.1",
     "mongodb": "^7.5.0",
+    "mongoose": "^9.9.1",
     "node-telegram-bot-api": "^1.2.0",
     "pptxgenjs": "^4.0.1"
   }
