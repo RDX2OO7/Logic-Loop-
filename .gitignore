@@ -1,15 +1,41 @@
+# Dependencies
 node_modules
 dist
+
+# Environment variables
 .env
+.env*
 /server/.env
 server/.env
+
+# Vercel
+.vercel
+
+# Test files
 server/agents/discoveryAgent.test.js
 server/agents/deepSearchAgent.test.js
 server/agents/resourceCuratorAgent.test.js
-server/fixtures
+server/agents/gapInnovationAgent.test.js
+server/agents/rankAngles.test.js
+server/orchestrator.test.js
+
+# Scratch / temp scripts
+scratch_test.js
+server/scratch_test.js
+server/scratch_relevance.js
+server/test_direct.js
+server/test_json.js
+server/test_models.js
+server/test_pipeline.js
+server/test_request.js
+
+# Exported / generated output files
 exports/
 server/exports/
+server/fixtures/
+*.docx
+*.pptx
+~$*
 
-
-.vercel
-.env*
+# Skills lock (generated)
+skills-lock.json

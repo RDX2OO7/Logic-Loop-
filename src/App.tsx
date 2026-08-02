@@ -219,7 +219,7 @@ export default function App() {
             ideaText={submittedIdea}
             phase="discover"
             onPhase1Complete={handlePhase1Complete}
-            onPhase2Complete={() => {}}
+            onPhase2Complete={() => { }}
             onError={handleError}
           />
         )}
@@ -242,7 +242,7 @@ export default function App() {
             phase="plan"
             draftId={phase1Data.draftId}
             selectedRank={selectedRank}
-            onPhase1Complete={() => {}}
+            onPhase1Complete={() => { }}
             onPhase2Complete={handleSinglePhase2Complete}
             onError={handleError}
           />

@@ -272,6 +272,49 @@ app.post("/api/pipeline", async (req, res) => {
   }
 });
 
+// POST /api/enhance-prompt
+app.post("/api/enhance-prompt", async (req, res) => {
+  try {
+    const { prompt } = req.body || {};
+    if (!prompt || !prompt.trim()) {
+      return res.status(400).json({ error: "Prompt is required." });
+    }
+
+    const { generateJSON } = await import("./lib/geminiClient.js");
+
+    const systemInstruction = `You are a prompt engineering expert. The user wants to write a high-quality project research or development proposal for ResearchOS.
+Generate 4 distinct, highly detailed, and optimized variations of the user's input prompt.
+Each variation should expand on technical stack suggestions, target audience/users, and concrete problems to solve.
+Respond ONLY with a JSON object in this format:
+{
+  "variations": [
+    "Variation 1...",
+    "Variation 2...",
+    "Variation 3...",
+    "Variation 4..."
+  ]
+}`;
+    
+    const userPrompt = `Enhance this prompt: "${prompt}"`;
+    const result = await generateJSON(systemInstruction, userPrompt);
+    
+    if (result && Array.isArray(result.variations)) {
+      return res.json(result);
+    }
+    
+    return res.json({
+      variations: [
+        `${prompt} with advanced ML orchestration and offline support`,
+        `${prompt} focusing on UX accessibility and scalable backend API design`,
+        `${prompt} deployed using docker containers on AWS with automated CI/CD`
+      ]
+    });
+  } catch (err) {
+    console.error("Error enhancing prompt:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 import { startBot } from "./bot/telegramBot.js";
 
 app.listen(PORT, () => {
