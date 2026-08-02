@@ -12,7 +12,7 @@ try {
 }
 
 import { runDiscoveryPhase, runPlanningPhase, runResearchOSPipeline } from "./orchestrator.js";
-import { streamFileById, listProjects, getProjectById } from "./db/projectStore.js";
+import { streamFileById, listProjects, getProjectById, getDraft, saveDraft } from "./db/projectStore.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const EXPORTS_DIR = path.join(__dirname, "exports");
 
@@ -29,6 +29,22 @@ const projectStore = new Map();
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
+
+// GET /api/drafts/:id
+app.get("/api/drafts/:id", async (req, res) => {
+  try {
+    let draft = draftStore.get(req.params.id);
+    if (!draft) {
+      draft = await getDraft(req.params.id);
+    }
+    if (!draft) return res.status(404).json({ error: "Draft not found" });
+    res.json(draft);
+  } catch (err) {
+    console.error("Get draft failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // POST /api/discover - Phase 1 SSE streaming
 app.post("/api/discover", async (req, res) => {
@@ -81,7 +97,13 @@ app.post("/api/discover", async (req, res) => {
     }
 
     const draftId = `draft-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
-    draftStore.set(draftId, phase1Result);
+    const draftRecord = { draftId, ...phase1Result };
+    draftStore.set(draftId, draftRecord);
+    try {
+      await saveDraft(draftRecord);
+    } catch (e) {
+      /* ignore db error */
+    }
 
     sendSSE("done", {
       status: phase1Result.status,
@@ -119,7 +141,10 @@ app.post("/api/plan", async (req, res) => {
 
   try {
     const { draftId, selection, studentId = "test" } = req.body || {};
-    const phase1Data = draftStore.get(draftId);
+    let phase1Data = draftStore.get(draftId);
+    if (!phase1Data) {
+      phase1Data = await getDraft(draftId);
+    }
 
     if (!phase1Data) {
       clearInterval(keepAliveInterval);
@@ -317,8 +342,8 @@ Respond ONLY with a JSON object in this format:
 
 import { startBot } from "./bot/telegramBot.js";
 
-app.listen(PORT, () => {
-  console.log(`Orchestrator server listening on http://localhost:${PORT}`);
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`Orchestrator server listening on http://127.0.0.1:${PORT}`);
 });
 
 startBot();

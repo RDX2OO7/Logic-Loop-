@@ -109,27 +109,40 @@ export async function listProjects(studentId, limit = 20) {
 }
 
 export async function saveDraft(draftData) {
+  const id = draftData.draftId || generateMockObjectId();
+  const record = { draftId: id, ...draftData, createdAt: new Date() };
+  inMemoryDrafts.set(id, record);
   try {
     const db = await getDb();
-    const result = await db.collection("drafts").insertOne({ ...draftData, createdAt: new Date() });
-    return result.insertedId.toString();
+    await db.collection("drafts").updateOne(
+      { draftId: id },
+      { $set: record },
+      { upsert: true }
+    );
+    return id;
   } catch (err) {
-    console.warn("[ProjectStore] Mongo saveDraft failed, saving to memory fallback:", err.message);
-    const draftId = generateMockObjectId();
-    inMemoryDrafts.set(draftId, { _id: draftId, ...draftData, createdAt: new Date() });
-    return draftId;
+    console.warn("[ProjectStore] Mongo saveDraft failed, saved to memory fallback:", err.message);
+    return id;
   }
 }
 
 export async function getDraft(draftId) {
+  if (inMemoryDrafts.has(draftId)) {
+    return inMemoryDrafts.get(draftId);
+  }
   try {
     const db = await getDb();
-    const { ObjectId } = await import("mongodb");
-    const draft = await db.collection("drafts").findOne({ _id: new ObjectId(draftId) });
+    let draft = await db.collection("drafts").findOne({ draftId: draftId });
     if (draft) return draft;
+    const { ObjectId } = await import("mongodb");
+    if (ObjectId.isValid(draftId)) {
+      draft = await db.collection("drafts").findOne({ _id: new ObjectId(draftId) });
+      if (draft) return draft;
+    }
   } catch (err) {
     console.warn("[ProjectStore] Mongo getDraft failed:", err.message);
   }
-  return inMemoryDrafts.get(draftId) || null;
+  return null;
 }
+
 

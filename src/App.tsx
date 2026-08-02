@@ -75,12 +75,71 @@ export default function App() {
     }
   }, [copilotData]);
 
-  // On initial render: if we have cached copilotData and no active workflow screen, show results
+  // Extract draftId from URL path (/plan/:draftId) or search param (?draftId=...)
+  const getUrlDraftId = (): string | null => {
+    const path = window.location.pathname;
+    const match = path.match(/\/plan\/([^\/]+)/);
+    if (match && match[1]) return match[1];
+
+    const params = new URLSearchParams(window.location.search);
+    return params.get('draftId');
+  };
+
+  const [urlDraftId] = useState<string | null>(getUrlDraftId);
+  const [draftLoading, setDraftLoading] = useState<boolean>(false);
+  const [draftError, setDraftError] = useState<string | null>(null);
+
+  // Fetch draft if draftId is in URL (/plan/:draftId)
   useEffect(() => {
+    if (!urlDraftId) return;
+
+    setDraftLoading(true);
+    setDraftError(null);
+
+    fetch(`http://localhost:3001/api/drafts/${urlDraftId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("This draft wasn't found — it may have expired or the link is wrong");
+        return res.json();
+      })
+      .then((draftData) => {
+        const angles = draftData.ranked_angles || draftData.angles || [];
+        const normalized_problem = draftData.normalized_problem || draftData.idea || 'Research Project Plan';
+        const evidence_summary = draftData.evidence_summary || '';
+        const gaps = draftData.gaps || [];
+
+        setPhase1Data({
+          status: 'angles_ready',
+          draftId: urlDraftId,
+          normalized_problem,
+          ranked_angles: angles,
+          angles,
+          evidence_summary,
+          gaps,
+          sources: draftData.sources,
+          sourceIds: draftData.sourceIds,
+        });
+
+        if (normalized_problem) {
+          setSubmittedIdea(normalized_problem);
+        }
+
+        setCurrentScreen('angle_selection');
+        setDraftLoading(false);
+      })
+      .catch((err) => {
+        setDraftError(err.message || "This draft wasn't found — it may have expired or the link is wrong");
+        setDraftLoading(false);
+      });
+  }, [urlDraftId]);
+
+  // On initial render: if we have cached copilotData and no active draftId URL, show results
+  useEffect(() => {
+    if (urlDraftId) return;
     if (copilotData && hasValidPlanData(copilotData) && currentScreen === 'input') {
       setCurrentScreen('results');
     }
   }, []);
+
 
   const handleIdeaSubmit = (ideaText: string) => {
     setSubmittedIdea(ideaText);
@@ -212,7 +271,29 @@ export default function App() {
       />
 
       <main className="flex-1 ml-[240px] min-h-screen flex flex-col">
-        {currentScreen === 'input' && <IdeaInputScreen onSubmitIdea={handleIdeaSubmit} />}
+        {draftLoading && (
+          <div className="flex-1 flex flex-col justify-center items-center p-12">
+            <div className="w-10 h-10 border-4 border-[#F5A623] border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-[16px] font-semibold text-[#15193D] dark:text-[#f8fafc]">Loading Research Draft...</p>
+            <p className="text-[13px] text-[#64748B] mt-1">Retrieving verified innovation angles...</p>
+          </div>
+        )}
+
+        {draftError && !draftLoading && (
+          <div className="flex-1 flex flex-col justify-center items-center p-12 text-center">
+            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-full flex items-center justify-center mb-4 text-xl font-bold">⚠️</div>
+            <h2 className="text-[18px] font-bold text-red-600 dark:text-red-400 mb-2">Draft Not Found</h2>
+            <p className="text-[14px] text-[#64748B] dark:text-[#94A3B8] max-w-md mb-6">{draftError}</p>
+            <button
+              onClick={() => { window.location.href = '/'; }}
+              className="px-5 py-2.5 bg-[#15193D] text-white rounded-lg text-[14px] font-semibold hover:bg-[#202657] transition-colors"
+            >
+              Create New Project Plan
+            </button>
+          </div>
+        )}
+
+        {!draftLoading && !draftError && currentScreen === 'input' && <IdeaInputScreen onSubmitIdea={handleIdeaSubmit} />}
 
         {currentScreen === 'progress_discover' && (
           <AgentProgressScreen

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResearchOS</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 400px;
+      min-height: 520px;
+      max-height: 600px;
+      background-color: #0B0E26;
+      color: #E2E8F0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #15193D 0%, #1E234D 100%);
+      padding: 16px;
+      border-bottom: 1px solid rgba(245, 166, 35, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, #F5A623 0%, #D98207 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Georgia, serif;
+      font-weight: bold;
+      font-size: 22px;
+      color: #15193D;
+      box-shadow: 0 2px 10px rgba(245, 166, 35, 0.4);
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-tagline {
+      font-size: 11px;
+      color: #94A3B8;
+    }
+
+    .badge {
+      background: rgba(245, 166, 35, 0.18);
+      color: #F5A623;
+      border: 1px solid rgba(245, 166, 35, 0.35);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-bar {
+      padding: 6px 16px;
+      background-color: #07091B;
+      border-bottom: 1px solid #1E234D;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #94A3B8;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: #64748B;
+      display: inline-block;
+    }
+
+    .status-dot.online {
+      background-color: #10B981;
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+    }
+
+    .status-dot.offline {
+      background-color: #EF4444;
+      box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+    }
+
+    .container {
+      padding: 16px;
+    }
+
+    /* Views */
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    /* Input Form */
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 12px;
+      margin-bottom: 8px;
+      color: #CBD5E1;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      background-color: #15193D;
+      border: 1px solid #2A3166;
+      border-radius: 8px;
+      padding: 10px;
+      color: #F8FAFC;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #F5A623;
+      box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.2);
+    }
+
+    /* Example Chips */
+    .examples-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #94A3B8;
+      margin-top: 10px;
+      margin-bottom: 6px;
+    }
+
+    .chips-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .example-chip {
+      background: #15193D;
+      border: 1px solid #2A3166;
+      color: #CBD5E1;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .example-chip:hover {
+      background: rgba(245, 166, 35, 0.15);
+      border-color: #F5A623;
+      color: #F5A623;
+    }
+
+    .quick-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 14px;
+    }
+
+    .btn-text {
+      background: none;
+      border: none;
+      color: #38BDF8;
+      font-size: 11px;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .btn-text:hover {
+      color: #7DD3FC;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, #F5A623 0%, #D98207 100%);
+      color: #0B0E26;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.1s, filter 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(245, 166, 35, 0.3);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Log Console */
+    .progress-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(245, 166, 35, 0.3);
+      border-top-color: #F5A623;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .step-title {
+      font-weight: 600;
+      color: #F5A623;
+      font-size: 13px;
+    }
+
+    .console {
+      background-color: #050714;
+      border: 1px solid #1E234D;
+      border-radius: 8px;
+      padding: 10px;
+      height: 220px;
+      overflow-y: auto;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    .log-entry {
+      margin-bottom: 4px;
+      word-break: break-word;
+    }
+
+    .log-entry .time {
+      color: #64748B;
+      margin-right: 6px;
+    }
+
+    .log-entry .msg {
+      color: #CBD5E1;
+    }
+
+    .log-entry.highlight {
+      color: #38BDF8;
+      font-weight: 600;
+    }
+
+    /* Results */
+    .result-card {
+      background-color: #15193D;
+      border: 1px solid #2A3166;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
+    .result-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 6px;
+    }
+
+    .angle-pill {
+      display: inline-block;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38BDF8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .result-summary {
+      font-size: 12px;
+      color: #94A3B8;
+      margin-bottom: 8px;
+    }
+
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .btn-secondary {
+      background-color: #1E234D;
+      color: #E2E8F0;
+      border: 1px solid #2A3166;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: background 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background-color: #2A3166;
+      color: #FFFFFF;
+    }
+
+    .btn-full {
+      width: 100%;
+      background-color: #38BDF8;
+      color: #0B0E26;
+      font-weight: 700;
+      padding: 10px;
+      border-radius: 6px;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 8px;
+      transition: filter 0.2s;
+    }
+
+    .btn-full:hover {
+      filter: brightness(1.1);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon">R</div>
+      <div>
+        <div class="brand-title">ResearchOS</div>
+        <div class="brand-tagline">Multi-Agent Research Assistant</div>
+      </div>
+    </div>
+    <span class="badge">v1.1</span>
+  </div>
+
+  <!-- Connection Status -->
+  <div class="status-bar">
+    <span id="statusDot" class="status-dot"></span>
+    <span id="statusText">Connecting to backend...</span>
+  </div>
+
+  <div class="container">
+
+    <!-- View 1: Input Form -->
+    <div id="inputView" class="view active">
+      <label for="ideaInput">Research Topic or Idea</label>
+      <textarea id="ideaInput" id="ideaEl" placeholder="e.g. AI-powered food waste reduction system for university canteens using computer vision and weight sensors..."></textarea>
+      
+      <div class="examples-label">Try an example topic:</div>
+      <div class="chips-grid">
+        <button class="example-chip" data-idea="AI-powered food waste reduction system for university canteens using computer vision and weight sensors to optimize batch preparation.">🌱 Food Waste AI</button>
+        <button class="example-chip" data-idea="P2P renewable energy trading network for campus microgrids using smart contracts and predictive load balancing.">⚡ Smart Microgrid</button>
+        <button class="example-chip" data-idea="Autonomous drone navigation system for indoor warehouse inventory tracking using visual-inertial odometry.">🚁 Warehouse Drone</button>
+      </div>
+
+      <div class="quick-actions">
+        <button id="clearBtn" class="btn-text">Clear</button>
+      </div>
+
+      <button id="generateBtn" id="submitEl" class="btn-primary">
+        <span>Generate Project Plan</span>
+        <span>⚡</span>
+      </button>
+    </div>
+
+    <!-- View 2: Progress & Live Logs -->
+    <div id="progressView" class="view">
+      <div class="progress-header">
+        <div class="spinner"></div>
+        <div id="stepText" class="step-title">Initializing Agents...</div>
+      </div>
+
+      <div id="consoleLog" class="console">
+        <!-- Live SSE messages stream here -->
+      </div>
+
+      <a id="viewAnglesAppBtn" href="#" target="_blank" class="btn-full" style="display: none; margin-top: 10px; background-color: #F5A623; color: #15193D; text-align: center;">
+        View directions in full app 🚀
+      </a>
+    </div>
+
+    <!-- View 3: Results -->
+    <div id="resultsView" class="view">
+      <div class="result-card">
+        <div id="resTitle" class="result-title">Project Title</div>
+        <div id="resAngle" class="angle-pill">Innovation Angle</div>
+        <div id="resSummary" class="result-summary">Verified architecture and project roadmap generated successfully.</div>
+      </div>
+
+      <a id="dashboardLink" href="http://localhost:5173/" target="_blank" class="btn-full">
+        Open Full Dashboard 🚀
+      </a>
+
+      <div class="actions-grid">
+        <a id="docxBtn" href="#" target="_blank" class="btn-secondary">
+          📄 Download DOCX
+        </a>
+        <a id="pptxBtn" href="#" target="_blank" class="btn-secondary">
+          📊 Download PPTX
+        </a>
+      </div>
+
+      <button id="newResearchBtn" class="btn-secondary" style="width: 100%; margin-top: 6px;">
+        🔄 Start New Research
+      </button>
+    </div>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -42,13 +42,15 @@ export default defineConfig({
   server: {
     port: 3000,
     open: false,
+    // SPA fallback — serves index.html for deep-links like /plan/:draftId
+    historyApiFallback: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://127.0.0.1:3001',
         changeOrigin: true,
       },
       '/exports': {
-        target: 'http://localhost:3001',
+        target: 'http://127.0.0.1:3001',
         changeOrigin: true,
       },
     },
