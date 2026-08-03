@@ -21,6 +21,8 @@ export async function readSSEResponse(
 
   if (!reader) return;
 
+  let currentEvent = 'message';
+
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -29,7 +31,6 @@ export async function readSSEResponse(
     const lines = buffer.split('\n');
     buffer = lines.pop() || ''; // Keep incomplete trailing line
 
-    let currentEvent = 'message';
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed) continue;

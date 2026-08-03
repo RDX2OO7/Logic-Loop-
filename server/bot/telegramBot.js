@@ -27,6 +27,11 @@ async function safeSendMessage(bot, chatId, text, options = {}) {
 }
 
 export function startBot() {
+  if (process.env.DISABLE_TELEGRAM_BOT === "true") {
+    console.log("ℹ️ Telegram bot is disabled via DISABLE_TELEGRAM_BOT env var.");
+    return null;
+  }
+
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
     console.warn("⚠️ TELEGRAM_BOT_TOKEN is not set. Telegram bot is disabled.");
@@ -213,7 +218,18 @@ Next Task: ${next ? next.text : 'None, project complete.'}`;
     }
   });
 
-  bot.on("polling_error", (err) => console.error("[bot] polling error:", err.message));
+  bot.on("polling_error", (err) => {
+    if (err.message?.includes("409 Conflict")) {
+      console.warn("⚠️ Telegram bot polling conflict (409): Another instance is running with this bot token. Pausing polling on this instance.");
+      try {
+        bot.stopPolling();
+      } catch (e) {
+        /* ignore */
+      }
+    } else {
+      console.error("[bot] polling error:", err.message);
+    }
+  });
 
   console.log("Telegram bot started (polling mode)");
   return bot;

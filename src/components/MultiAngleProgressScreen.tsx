@@ -51,7 +51,7 @@ export const MultiAngleProgressScreen: React.FC<MultiAngleProgressScreenProps> =
       (event, data) => {
         if (event === 'progress') {
           setStatusMessage(data.message || 'Running parallel pipeline pass...');
-        } else if (event === 'done') {
+        } else if (event === 'done' || data?.status === 'completed' || data?.results) {
           setIsDone(true);
           setColumnIndices(angles.map(() => 4)); // snap all to complete
           setStatusMessage('All angles planned! Routing to comparison...');

@@ -123,7 +123,7 @@ export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({
             else if (msg.includes('DeepSearch')) setActiveIndex(1);
             else if (msg.includes('Filtering') || msg.includes('Clustering')) setActiveIndex(2);
             else if (msg.includes('Gap & Innovation')) setActiveIndex(3);
-          } else if (event === 'done') {
+          } else if (event === 'done' || data?.angles || data?.status === 'angles_ready') {
             setActiveIndex(4); // Nodes 0..3 done
             const angleCount = data?.angles?.length ?? 0;
             setStatusMessage(
@@ -153,7 +153,7 @@ export const AgentProgressScreen: React.FC<AgentProgressScreenProps> = ({
         (event, data) => {
           if (event === 'progress') {
             setStatusMessage(data.message || 'Planning...');
-          } else if (event === 'done') {
+          } else if (event === 'done' || data?.status === 'complete' || data?.results) {
             setActiveIndex(8); // All 8 nodes done
             setStatusMessage('Project planning complete!');
 
