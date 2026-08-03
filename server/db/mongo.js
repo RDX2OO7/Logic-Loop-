@@ -4,9 +4,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import dns from "dns";
 
-// Always resolve .env from server/ regardless of where node is run from
+// Resolve .env from server/ or project root
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config();
 
 // Resolve SRV DNS query issues (querySrv ECONNREFUSED) common on Windows / local ISP DNS
 try {
@@ -19,10 +20,26 @@ let _client = null;
 let _db = null;
 let _bucket = null;
 
+export async function connectDB() {
+  if (!process.env.MONGODB_URI) {
+    console.warn("⚠️ MONGODB_URI is not set. Operating with in-memory storage fallback.");
+    return null;
+  }
+  try {
+    const db = await getDb();
+    console.log("✅ Successfully connected to MongoDB Atlas");
+    return db;
+  } catch (err) {
+    console.error("❌ Failed to connect to MongoDB:", err.message);
+    console.warn("⚠️ Continuing with in-memory storage fallback.");
+    return null;
+  }
+}
+
 export async function getDb() {
   if (_db) return _db;
   if (!process.env.MONGODB_URI) {
-    throw new Error("Missing MONGODB_URI in .env — get a free cluster at https://www.mongodb.com/cloud/atlas/register");
+    throw new Error("Missing MONGODB_URI in environment variables — get a free cluster at https://www.mongodb.com/cloud/atlas/register");
   }
   _client = new MongoClient(process.env.MONGODB_URI);
   await _client.connect();
@@ -43,3 +60,4 @@ export async function closeMongoConnection() {
   _db = null;
   _bucket = null;
 }
+

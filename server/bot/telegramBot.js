@@ -7,9 +7,6 @@ import { linkTelegramChat, getTaskProgress, findNextIncompleteTask, getLinkedPro
 import { generateText } from "../lib/geminiClient.js";
 import { runExplainerAgent } from "../agents/explainerAgent.js";
 
-const token = process.env.TELEGRAM_BOT_TOKEN;
-if (!token) throw new Error("Missing TELEGRAM_BOT_TOKEN in .env");
-
 async function safeSendMessage(bot, chatId, text, options = {}) {
   try {
     return await bot.sendMessage(chatId, text, options);
@@ -30,7 +27,19 @@ async function safeSendMessage(bot, chatId, text, options = {}) {
 }
 
 export function startBot() {
-  const bot = new TelegramBot(token, { polling: true });
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) {
+    console.warn("⚠️ TELEGRAM_BOT_TOKEN is not set. Telegram bot is disabled.");
+    return null;
+  }
+
+  let bot;
+  try {
+    bot = new TelegramBot(token, { polling: true });
+  } catch (err) {
+    console.error("❌ Failed to initialize Telegram bot:", err.message);
+    return null;
+  }
 
   bot.on("message", async (msg) => {
     const chatId = msg.chat.id;

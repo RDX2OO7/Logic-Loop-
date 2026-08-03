@@ -51,7 +51,7 @@ const getEffortBadgeClass = (score?: string) => {
   }
 };
 
-const SERVER_BASE = 'http://localhost:3001';
+const SERVER_BASE = '';
 
 function resolveExportUrl(relativeUrl?: string): string {
   if (!relativeUrl) return '#';

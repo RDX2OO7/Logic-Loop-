@@ -96,7 +96,7 @@ export default function App() {
     setDraftLoading(true);
     setDraftError(null);
 
-    fetch(`http://localhost:3001/api/drafts/${urlDraftId}`)
+    fetch(`/api/drafts/${urlDraftId}`)
       .then((res) => {
         if (!res.ok) throw new Error("This draft wasn't found — it may have expired or the link is wrong");
         return res.json();

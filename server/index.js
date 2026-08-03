@@ -13,14 +13,21 @@ try {
 
 import { runDiscoveryPhase, runPlanningPhase, runResearchOSPipeline } from "./orchestrator.js";
 import { streamFileById, listProjects, getProjectById, getDraft, saveDraft } from "./db/projectStore.js";
+import { connectDB } from "./db/mongo.js";
+import { startBot } from "./bot/telegramBot.js";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const EXPORTS_DIR = path.join(__dirname, "exports");
+const DIST_DIR = path.join(__dirname, "../dist");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
+
+// Serve static assets from the Vite build directory
+app.use(express.static(DIST_DIR));
 // In-memory stores for drafts and completed projects
 const draftStore = new Map();
 const projectStore = new Map();
@@ -319,14 +326,14 @@ Respond ONLY with a JSON object in this format:
     "Variation 4..."
   ]
 }`;
-    
+
     const userPrompt = `Enhance this prompt: "${prompt}"`;
     const result = await generateJSON(systemInstruction, userPrompt);
-    
+
     if (result && Array.isArray(result.variations)) {
       return res.json(result);
     }
-    
+
     return res.json({
       variations: [
         `${prompt} with advanced ML orchestration and offline support`,
@@ -340,13 +347,24 @@ Respond ONLY with a JSON object in this format:
   }
 });
 
-import { startBot } from "./bot/telegramBot.js";
-
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`Orchestrator server listening on http://127.0.0.1:${PORT}`);
+// Wildcard route fallback for React Router SPA navigation (Express 5 compatible)
+app.use((req, res, next) => {
+  if (req.method === "GET" && !req.path.startsWith("/api")) {
+    return res.sendFile(path.join(DIST_DIR, "index.html"));
+  }
+  next();
 });
 
-startBot();
+async function startServer() {
+  await connectDB();
+  app.listen(PORT, () => {
+    console.log(`🚀 Orchestrator server listening on port ${PORT}`);
+  });
+  startBot();
+}
+
+startServer();
 
 export default app;
+
 

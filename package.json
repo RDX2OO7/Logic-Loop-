@@ -8,17 +8,26 @@
     "dev:server": "node server/index.js",
     "dev:all": "concurrently --kill-others-on-fail -n \"CLIENT,SERVER\" -c \"cyan,magenta\" \"vite\" \"node server/index.js\"",
     "build": "tsc && vite build",
+    "start": "node server/index.js",
     "preview": "vite preview"
   },
   "dependencies": {
     "@google/genai": "^2.15.0",
+    "cors": "^2.8.6",
+    "docx": "^9.7.1",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "fast-xml-parser": "^5.10.1",
     "framer-motion": "^11.18.2",
     "lucide-react": "^0.474.0",
+    "ml-kmeans": "^7.0.1",
+    "mongodb": "^7.5.0",
+    "mongoose": "^9.9.1",
     "node-telegram-bot-api": "^1.2.0",
+    "pptxgenjs": "^4.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.18.2",
-    "vercel": "^58.4.4"
+    "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
@@ -28,6 +37,7 @@
     "concurrently": "^10.0.4",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.3",
+    "vercel": "^58.4.4",
     "vite": "^6.4.3"
   }
 }
