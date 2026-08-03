@@ -20,14 +20,13 @@ function getClient() {
   return _client;
 }
 
-const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-const MAX_RETRIES = 5;
-const BASE_BACKOFF_MS = 2000;
-const CALL_TIMEOUT_MS = 60000;
+const MAX_RETRIES = 2;
+const BASE_BACKOFF_MS = 1500;
+const CALL_TIMEOUT_MS = 45000;
 
 function parseRetryDelaySec(err) {
   try {
-    const body = typeof err.message === 'string' ? JSON.parse(err.message) : null;
+    const body = JSON.parse(err.message);
     const retryInfo = body?.error?.details?.find(
       (d) => d["@type"] === "type.googleapis.com/google.rpc.RetryInfo"
     );
@@ -52,44 +51,7 @@ function withTimeout(promise, ms, label = "Gemini API call") {
   return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
 }
 
-async function callWithRetry(fn) {
-  let attempt = 0;
-  while (true) {
-    try {
-      return await fn();
-    } catch (err) {
-      const msg = String(err?.message || "").toLowerCase();
-      const status = err?.status || err?.statusCode;
-      const isRetryable =
-        status === 429 ||
-        status === 503 ||
-        status === 500 ||
-        status === 502 ||
-        status === 504 ||
-        msg.includes("503") ||
-        msg.includes("overloaded") ||
-        msg.includes("service unavailable") ||
-        msg.includes("resource exhausted") ||
-        msg.includes("rate limit") ||
-        msg.includes("timed out");
-
-      if (isRetryable && attempt < MAX_RETRIES) {
-        attempt++;
-        const serverDelayMs = parseRetryDelaySec(err);
-        const waitMs = serverDelayMs ?? Math.min(30000, BASE_BACKOFF_MS * Math.pow(1.5, attempt - 1));
-        console.warn(
-          `[geminiClient] ${status || err.message} (attempt ${attempt}/${MAX_RETRIES}). ` +
-          `Waiting ${(waitMs / 1000).toFixed(1)}s…`
-        );
-        await sleep(waitMs);
-      } else {
-        throw err;
-      }
-    }
-  }
-}
-
-export async function generateJSON(systemInstruction, userPrompt, model = DEFAULT_MODEL) {
+export async function generateJSON(systemInstruction, userPrompt, model = "gemini-3.1-flash-lite") {
   const callOnce = async (prompt) => {
     return withTimeout(
       getClient().models.generateContent({
@@ -105,7 +67,30 @@ export async function generateJSON(systemInstruction, userPrompt, model = DEFAUL
     );
   };
 
-  const raw = await callWithRetry(() => callOnce(userPrompt));
+  const callWithRetry = async (prompt) => {
+    let attempt = 0;
+    while (true) {
+      try {
+        return await callOnce(prompt);
+      } catch (err) {
+        const isRetryable = err?.status === 429 || err?.status === 503 || err?.message?.includes("timed out");
+        if (isRetryable && attempt < MAX_RETRIES) {
+          attempt++;
+          const serverDelayMs = parseRetryDelaySec(err);
+          const waitMs = serverDelayMs ?? BASE_BACKOFF_MS * attempt;
+          console.warn(
+            `[geminiClient] ${err.status || err.message} (attempt ${attempt}/${MAX_RETRIES}). ` +
+            `Waiting ${(waitMs / 1000).toFixed(1)}s…`
+          );
+          await sleep(waitMs);
+        } else {
+          throw err;
+        }
+      }
+    }
+  };
+
+  const raw = await callWithRetry(userPrompt);
   try {
     return JSON.parse(raw);
   } catch (_parseErr) {
@@ -113,7 +98,7 @@ export async function generateJSON(systemInstruction, userPrompt, model = DEFAUL
       `${userPrompt}\n\nYour previous response could not be parsed as JSON. ` +
       `Respond with ONLY valid JSON, no markdown fences, no commentary. ` +
       `Previous invalid response was:\n${raw}`;
-    const retryRaw = await callWithRetry(() => callOnce(retryPrompt));
+    const retryRaw = await callWithRetry(retryPrompt);
     try {
       return JSON.parse(retryRaw);
     } catch (err2) {
@@ -122,23 +107,18 @@ export async function generateJSON(systemInstruction, userPrompt, model = DEFAUL
   }
 }
 
-export async function generateText(systemInstruction, userPrompt, model = DEFAULT_MODEL, thinkingBudget = undefined) {
+export async function generateText(systemInstruction, userPrompt, model = "gemini-3.1-flash-lite", thinkingBudget = undefined) {
   const config = { systemInstruction };
   if (thinkingBudget !== undefined) {
     config.thinkingConfig = { thinkingBudget };
   }
-
-  const callOnce = async () => {
-    return withTimeout(
-      getClient().models.generateContent({
-        model,
-        contents: userPrompt,
-        config,
-      }).then(res => res.text),
-      CALL_TIMEOUT_MS,
-      "generateText"
-    );
-  };
-
-  return callWithRetry(callOnce);
+  return withTimeout(
+    getClient().models.generateContent({
+      model,
+      contents: userPrompt,
+      config,
+    }).then(res => res.text),
+    CALL_TIMEOUT_MS,
+    "generateText"
+  );
 }
