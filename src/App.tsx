@@ -111,12 +111,9 @@ export default function App() {
           status: 'angles_ready',
           draftId: urlDraftId,
           normalized_problem,
-          ranked_angles: angles,
           angles,
           evidence_summary,
           gaps,
-          sources: draftData.sources,
-          sourceIds: draftData.sourceIds,
         });
 
         if (normalized_problem) {
